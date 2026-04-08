@@ -1,0 +1,52 @@
+# ══════════════════════════════════════════════════════════
+# G_One_Sync AI — Dependencies
+# ══════════════════════════════════════════════════════════
+
+# ── Core ──────────────────────────────────────────────────
+numpy>=2.0
+pandas>=2.2
+scipy>=1.13
+pyarrow>=16.0
+
+# ── Configuration ────────────────────────────────────────
+pydantic>=2.7
+pydantic-settings>=2.3
+python-dotenv>=1.0
+
+# ── API / Ingestion ──────────────────────────────────────
+fastapi>=0.111
+uvicorn[standard]>=0.30
+httpx>=0.27
+orjson>=3.10
+
+# ── Logging ──────────────────────────────────────────────
+loguru>=0.7
+
+# ── ML: Classical ────────────────────────────────────────
+scikit-learn>=1.5
+xgboost>=2.1
+lightgbm>=4.4
+
+# ── ML: Deep Learning (install torch separately with CUDA)
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# ── ML: Experiment Tracking ──────────────────────────────
+mlflow>=2.14
+optuna>=3.6
+
+# ── Explainability ───────────────────────────────────────
+shap>=0.45
+
+# ── Visualization ────────────────────────────────────────
+plotly>=5.22
+
+# ── Monitoring ───────────────────────────────────────────
+prometheus-client>=0.20
+
+# ── Utilities ────────────────────────────────────────────
+tqdm>=4.66
+joblib>=1.4
+
+# ── Testing ──────────────────────────────────────────────
+pytest>=8.2
+pytest-asyncio>=0.23

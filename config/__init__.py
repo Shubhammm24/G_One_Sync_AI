@@ -1,0 +1,1 @@
+# JeevanSync AI — Configuration Package

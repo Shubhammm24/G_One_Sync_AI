@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  # ── Model Serving API ────────────────────────────────────
+  prediction-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: g-one-sync-serving
+    ports:
+      - "8001:8001"
+    volumes:
+      - ../models:/app/models:ro
+    environment:
+      - JEEVAN_MODEL_USE_GPU=true
+      - JEEVAN_SERVING_SERVING_PORT=8001
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Data Ingestion API ───────────────────────────────────
+  ingest-api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: g-one-sync-ingest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+    environment:
+      - JEEVAN_API_PORT=8000
+    command: ["python3", "-m", "uvicorn", "src.ingestion.ingest_api:app",
+              "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+    restart: unless-stopped
+
+  # ── Redpanda (Kafka-compatible) ──────────────────────────
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v24.1.1
+    container_name: g-one-sync-redpanda
+    command:
+      - redpanda start
+      - --smp 1
+      - --memory 512M
+      - --overprovisioned
+      - --kafka-addr PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://redpanda:9092
+    ports:
+      - "9092:9092"
+      - "9644:9644"
+    volumes:
+      - redpanda-data:/var/lib/redpanda/data
+
+  # ── MLflow Tracking ──────────────────────────────────────
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.0
+    container_name: g-one-sync-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-data:/mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+
+volumes:
+  redpanda-data:
+  mlflow-data:
