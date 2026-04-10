@@ -1,4 +1,4 @@
-# JeevanSync AI
+# G_One_Sync AI
 
 ## AI-Powered Early Clinical Deterioration Prediction System
 
