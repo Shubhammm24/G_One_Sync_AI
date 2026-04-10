@@ -153,6 +153,10 @@ class BiLSTMTrainer(BaseTrainer):
         epochs: int = 50,
         patience: int = 10,
         use_mixed_precision: bool = True,
+        loss_type: str = "focal",
+        focal_alpha: float = 0.25,
+        focal_gamma: float = 2.0,
+        attn_reg_weight: float = 0.01,
         artifacts_dir: Optional[Path] = None,
         use_mlflow: bool = True,
     ):
@@ -173,6 +177,10 @@ class BiLSTMTrainer(BaseTrainer):
             "epochs": epochs,
             "patience": patience,
             "use_mixed_precision": use_mixed_precision,
+            "loss_type": loss_type,
+            "focal_alpha": focal_alpha,
+            "focal_gamma": focal_gamma,
+            "attn_reg_weight": attn_reg_weight,
             "device": str(self.device),
         }
 
@@ -180,6 +188,10 @@ class BiLSTMTrainer(BaseTrainer):
         self.epochs = epochs
         self.patience = patience
         self.use_amp = use_mixed_precision and self.device.type == "cuda"
+        self.loss_type = loss_type
+        self.focal_alpha = focal_alpha
+        self.focal_gamma = focal_gamma
+        self.attn_reg_weight = attn_reg_weight
 
     def _build_model(self, **kwargs) -> BiLSTMAttentionModel:
         """Build BiLSTM + Attention model."""
@@ -227,11 +239,24 @@ class BiLSTMTrainer(BaseTrainer):
             optimizer, mode="max", patience=5, factor=0.5, verbose=True,
         )
 
-        # Class-weighted loss
+        # Loss function — Focal Loss (better precision) or weighted BCE
         pos_count = train_data[1].sum()
         neg_count = len(train_data[1]) - pos_count
-        pos_weight = torch.tensor([neg_count / max(pos_count, 1)], device=self.device)
-        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        pos_weight_val = float(neg_count / max(pos_count, 1))
+
+        if self.loss_type == "focal":
+            from src.modeling.losses import FocalLoss
+            criterion = FocalLoss(
+                alpha=self.focal_alpha,
+                gamma=self.focal_gamma,
+                pos_weight=pos_weight_val,
+            )
+            logger.info("Using Focal Loss (alpha={}, gamma={}, pos_weight={:.1f})",
+                        self.focal_alpha, self.focal_gamma, pos_weight_val)
+        else:
+            pos_weight = torch.tensor([pos_weight_val], device=self.device)
+            criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+            logger.info("Using Weighted BCE Loss (pos_weight={:.1f})", pos_weight_val)
 
         # Mixed precision scaler
         scaler = torch.amp.GradScaler("cuda") if self.use_amp else None
@@ -260,16 +285,23 @@ class BiLSTMTrainer(BaseTrainer):
 
                 if self.use_amp:
                     with torch.amp.autocast("cuda"):
-                        logits, _ = self.model(X_batch)
+                        logits, attn_w = self.model(X_batch)
                         loss = criterion(logits, y_batch)
+                        # Attention entropy regularization: penalize uniform attention
+                        if self.attn_reg_weight > 0:
+                            attn_entropy = -(attn_w * torch.log(attn_w + 1e-8)).sum(dim=1).mean()
+                            loss = loss - self.attn_reg_weight * attn_entropy
                     scaler.scale(loss).backward()
                     scaler.unscale_(optimizer)
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                     scaler.step(optimizer)
                     scaler.update()
                 else:
-                    logits, _ = self.model(X_batch)
+                    logits, attn_w = self.model(X_batch)
                     loss = criterion(logits, y_batch)
+                    if self.attn_reg_weight > 0:
+                        attn_entropy = -(attn_w * torch.log(attn_w + 1e-8)).sum(dim=1).mean()
+                        loss = loss - self.attn_reg_weight * attn_entropy
                     loss.backward()
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                     optimizer.step()

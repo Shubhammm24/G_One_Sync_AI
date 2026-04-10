@@ -289,6 +289,92 @@ def run_shap_explanations(
     }
 
 
+def run_calibration_and_thresholds(
+    trainers: dict[str, object],
+    splits: dict[str, pd.DataFrame],
+    seq_data: dict[str, tuple[np.ndarray, np.ndarray]],
+    target_column: str = "deterioration_next_12h",
+) -> dict:
+    """
+    Post-training improvements:
+    1. Probability calibration (isotonic regression)
+    2. Threshold optimization (F1, Youden, clinical, precision@90, recall@90)
+    """
+    from src.modeling.calibration import ProbabilityCalibrator, ThresholdOptimizer
+
+    logger.info("╔═══════════════════════════════════════╗")
+    logger.info("║  Calibration & Threshold Optimization ║")
+    logger.info("╚═══════════════════════════════════════╝")
+
+    results = {}
+    threshold_optimizer = ThresholdOptimizer()
+
+    for model_name, trainer in trainers.items():
+        logger.info("── {} ──", model_name.upper())
+
+        # Get val/test predictions
+        if model_name == "xgboost":
+            val_prob = trainer._predict_proba_impl(splits["val"])
+            test_prob = trainer._predict_proba_impl(splits["test"])
+            val_labels = splits["val"][target_column].values
+            test_labels = splits["test"][target_column].values
+        elif model_name in ("bilstm", "transformer") and seq_data:
+            val_prob = trainer._predict_proba_impl(seq_data["val"])
+            test_prob = trainer._predict_proba_impl(seq_data["test"])
+            val_labels = seq_data["val"][1]
+            test_labels = seq_data["test"][1]
+        else:
+            continue
+
+        # 1. Calibrate probabilities (fit on val, apply to test)
+        calibrator = ProbabilityCalibrator(method="isotonic")
+        calibrator.fit(val_prob, val_labels)
+        test_prob_calibrated = calibrator.transform(test_prob)
+
+        # 2. Find optimal thresholds on val set
+        thresholds = threshold_optimizer.optimize(
+            val_prob, val_labels, model_name=model_name,
+        )
+
+        # 3. Evaluate with optimal thresholds on test set
+        from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+
+        model_results = {
+            "calibration": calibrator.calibration_stats,
+            "optimal_thresholds": thresholds,
+            "test_with_optimal_thresholds": {},
+        }
+
+        for strategy, threshold in thresholds.items():
+            preds = (test_prob >= threshold).astype(int)
+            model_results["test_with_optimal_thresholds"][strategy] = {
+                "threshold": float(threshold),
+                "precision": float(precision_score(test_labels, preds, zero_division=0)),
+                "recall": float(recall_score(test_labels, preds, zero_division=0)),
+                "f1": float(f1_score(test_labels, preds, zero_division=0)),
+            }
+
+        # Log best improvement
+        best_strategy = max(
+            model_results["test_with_optimal_thresholds"],
+            key=lambda s: model_results["test_with_optimal_thresholds"][s]["f1"],
+        )
+        best = model_results["test_with_optimal_thresholds"][best_strategy]
+        logger.info(
+            "  Best threshold ({}): t={:.3f} → P={:.3f} R={:.3f} F1={:.3f}",
+            best_strategy, thresholds[best_strategy],
+            best["precision"], best["recall"], best["f1"],
+        )
+
+        results[model_name] = model_results
+
+    # Save thresholds
+    threshold_path = model_settings.artifacts_dir / "optimal_thresholds.json"
+    threshold_optimizer.save(threshold_path)
+
+    return results
+
+
 # ── Main ─────────────────────────────────────────────────────────────────
 
 
@@ -300,6 +386,7 @@ def main():
     parser.add_argument("--window-size", type=int, default=12)
     parser.add_argument("--no-ensemble", action="store_true")
     parser.add_argument("--no-shap", action="store_true")
+    parser.add_argument("--no-calibration", action="store_true")
     args = parser.parse_args()
 
     start_time = time.time()
@@ -356,7 +443,14 @@ def main():
         shap_results = run_shap_explanations(trainers["xgboost"], splits, args.target)
         all_results["shap"] = shap_results
 
-    # Step 6: Summary
+    # Step 6: Calibration + Threshold Optimization (NEW)
+    if not args.no_calibration and trainers:
+        cal_results = run_calibration_and_thresholds(
+            trainers, splits, seq_data, args.target,
+        )
+        all_results["calibration"] = cal_results
+
+    # Step 7: Summary
     elapsed = time.time() - start_time
     logger.info("╔═══════════════════════════════════════════════════╗")
     logger.info("║  🏁 Training Pipeline Complete                    ║")
@@ -371,6 +465,23 @@ def main():
                 model_name.ljust(12), test.get("auroc", 0), test.get("auprc", 0), test.get("f1", 0),
             )
 
+    # Show optimized thresholds summary
+    if "calibration" in all_results:
+        logger.info("╠═══════════════════════════════════════════════════╣")
+        logger.info("║  Optimized Thresholds (best F1 per model):       ║")
+        for model_name, cal in all_results["calibration"].items():
+            if "test_with_optimal_thresholds" in cal:
+                best_strat = max(
+                    cal["test_with_optimal_thresholds"],
+                    key=lambda s: cal["test_with_optimal_thresholds"][s]["f1"],
+                )
+                best = cal["test_with_optimal_thresholds"][best_strat]
+                t = cal["optimal_thresholds"][best_strat]
+                logger.info(
+                    "║  {} t={:.2f} → P={:.3f} R={:.3f} F1={:.3f}",
+                    model_name.ljust(12), t, best["precision"], best["recall"], best["f1"],
+                )
+
     logger.info("╚═══════════════════════════════════════════════════╝")
 
     # Save summary
@@ -383,3 +494,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

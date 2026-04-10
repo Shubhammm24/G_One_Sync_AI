@@ -162,6 +162,9 @@ class TransformerTrainer(BaseTrainer):
         patience: int = 10,
         warmup_epochs: int = 5,
         use_mixed_precision: bool = True,
+        loss_type: str = "focal",
+        focal_alpha: float = 0.25,
+        focal_gamma: float = 2.0,
         artifacts_dir: Optional[Path] = None,
         use_mlflow: bool = True,
     ):
@@ -184,6 +187,9 @@ class TransformerTrainer(BaseTrainer):
             "epochs": epochs,
             "patience": patience,
             "warmup_epochs": warmup_epochs,
+            "loss_type": loss_type,
+            "focal_alpha": focal_alpha,
+            "focal_gamma": focal_gamma,
             "device": str(self.device),
         }
 
@@ -192,6 +198,9 @@ class TransformerTrainer(BaseTrainer):
         self.patience = patience
         self.warmup_epochs = warmup_epochs
         self.use_amp = use_mixed_precision and self.device.type == "cuda"
+        self.loss_type = loss_type
+        self.focal_alpha = focal_alpha
+        self.focal_gamma = focal_gamma
 
     def _build_model(self, **kwargs) -> TemporalTransformerModel:
         """Build Temporal Transformer model."""
@@ -254,11 +263,23 @@ class TransformerTrainer(BaseTrainer):
         total_steps = len(train_loader) * self.epochs
         scheduler = self._get_lr_scheduler(optimizer, total_steps)
 
-        # Class-weighted loss
+        # Loss function — Focal Loss or weighted BCE
         pos_count = train_data[1].sum()
         neg_count = len(train_data[1]) - pos_count
-        pos_weight = torch.tensor([neg_count / max(pos_count, 1)], device=self.device)
-        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        pos_weight_val = float(neg_count / max(pos_count, 1))
+
+        if self.loss_type == "focal":
+            from src.modeling.losses import FocalLoss
+            criterion = FocalLoss(
+                alpha=self.focal_alpha,
+                gamma=self.focal_gamma,
+                pos_weight=pos_weight_val,
+            )
+            logger.info("Using Focal Loss (alpha={}, gamma={}, pos_weight={:.1f})",
+                        self.focal_alpha, self.focal_gamma, pos_weight_val)
+        else:
+            pos_weight = torch.tensor([pos_weight_val], device=self.device)
+            criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 
         scaler = torch.amp.GradScaler("cuda") if self.use_amp else None
 
