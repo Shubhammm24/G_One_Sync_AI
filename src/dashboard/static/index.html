@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G_One_Sync AI — Clinical Monitoring Dashboard</title>
+    <meta name="description" content="Real-time ICU deterioration prediction monitoring dashboard powered by AI">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <header class="header" id="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <rect width="32" height="32" rx="8" fill="url(#bgGrad)" fill-opacity="0.15"/>
+                        <circle cx="16" cy="16" r="11" stroke="url(#lineGrad)" stroke-width="2" fill="none"/>
+                        <path d="M9 16h3.5l2-6 2.5 12 2-6h4" stroke="url(#lineGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <defs>
+                            <linearGradient id="bgGrad" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#06b6d4"/>
+                            </linearGradient>
+                            <linearGradient id="lineGrad" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#22d3ee"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>G_One_Sync <span class="ai-badge">AI</span></h1>
+                    <p class="subtitle">ICU Deterioration Monitoring System</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-center">
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-view="overview" id="navOverview">
+                    <span class="nav-icon">📊</span> Overview
+                </button>
+                <button class="nav-tab" data-view="patients" id="navPatients">
+                    <span class="nav-icon">👥</span> Patients
+                </button>
+                <button class="nav-tab" data-view="analytics" id="navAnalytics">
+                    <span class="nav-icon">📈</span> Analytics
+                </button>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator" id="connectionStatus">
+                <span class="pulse"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+            <div class="clock" id="clock"></div>
+        </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════════════
+         VIEW: Overview
+         ══════════════════════════════════════════════════════ -->
+    <main class="view active" id="viewOverview">
+
+        <!-- KPI Strip -->
+        <section class="kpi-strip">
+            <div class="kpi-card glow-indigo">
+                <div class="kpi-top">
+                    <span class="kpi-icon-wrap indigo">👥</span>
+                    <span class="kpi-trend up" id="patientsTrend">—</span>
+                </div>
+                <span class="kpi-value" id="totalPatients">—</span>
+                <span class="kpi-label">Active Patients</span>
+            </div>
+            <div class="kpi-card glow-red">
+                <div class="kpi-top">
+                    <span class="kpi-icon-wrap red">🚨</span>
+                </div>
+                <span class="kpi-value" id="criticalCount">—</span>
+                <span class="kpi-label">Critical Risk</span>
+                <div class="kpi-bar critical-bar" id="criticalBar"></div>
+            </div>
+            <div class="kpi-card glow-orange">
+                <div class="kpi-top">
+                    <span class="kpi-icon-wrap orange">⚠️</span>
+                </div>
+                <span class="kpi-value" id="highCount">—</span>
+                <span class="kpi-label">High Risk</span>
+                <div class="kpi-bar high-bar" id="highBar"></div>
+            </div>
+            <div class="kpi-card glow-green">
+                <div class="kpi-top">
+                    <span class="kpi-icon-wrap green">🎯</span>
+                </div>
+                <span class="kpi-value" id="ensembleAuroc">—</span>
+                <span class="kpi-label">Ensemble AUROC</span>
+            </div>
+            <div class="kpi-card glow-cyan">
+                <div class="kpi-top">
+                    <span class="kpi-icon-wrap cyan">⚡</span>
+                </div>
+                <span class="kpi-value" id="gpuUsage">—</span>
+                <span class="kpi-label">GPU VRAM</span>
+            </div>
+            <div class="kpi-card glow-purple">
+                <div class="kpi-top">
+                    <span class="kpi-icon-wrap purple">🔔</span>
+                </div>
+                <span class="kpi-value" id="alertTotal">0</span>
+                <span class="kpi-label">Total Alerts</span>
+            </div>
+        </section>
+
+        <!-- Charts Row -->
+        <section class="charts-row">
+            <!-- Risk Distribution Donut -->
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <h2>Risk Distribution</h2>
+                    <span class="badge live">LIVE</span>
+                </div>
+                <div class="chart-container donut-container">
+                    <canvas id="riskDonutChart"></canvas>
+                    <div class="donut-center">
+                        <span class="donut-total" id="donutTotal">—</span>
+                        <span class="donut-label">patients</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deterioration Trend Line -->
+            <div class="panel chart-panel wide">
+                <div class="panel-header">
+                    <h2>Deterioration Trend (Last 60 min)</h2>
+                    <span class="badge">Mean Probability</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Model Comparison -->
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <h2>Model Comparison</h2>
+                    <span class="badge">AUROC</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="modelChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Row: Top Risk Patients + SHAP + Alerts -->
+        <section class="bottom-row">
+            <!-- Top Risk Patients Table -->
+            <div class="panel table-panel">
+                <div class="panel-header">
+                    <h2>⚡ Highest Risk Patients</h2>
+                    <span class="badge danger">TOP 10</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="topPatientsTable">
+                        <thead>
+                            <tr>
+                                <th>Bed</th>
+                                <th>Deterioration %</th>
+                                <th>Risk</th>
+                                <th>HR</th>
+                                <th>SpO2</th>
+                                <th>Lactate</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topPatientsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- SHAP Features -->
+            <div class="panel shap-panel">
+                <div class="panel-header">
+                    <h2>Top Risk Factors</h2>
+                    <span class="badge indigo">SHAP</span>
+                </div>
+                <div class="shap-bars" id="shapBars">
+                    <div class="loading-text">Loading SHAP...</div>
+                </div>
+            </div>
+
+            <!-- Alert Feed -->
+            <div class="panel alert-panel">
+                <div class="panel-header">
+                    <h2>Live Alerts</h2>
+                    <span class="alert-count-badge" id="alertCountBadge">0</span>
+                </div>
+                <div class="alert-feed" id="alertFeed">
+                    <div class="alert-empty">Monitoring... No alerts yet</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ══════════════════════════════════════════════════════
+         VIEW: Patients
+         ══════════════════════════════════════════════════════ -->
+    <main class="view" id="viewPatients">
+        <section class="patients-header">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="patientSearch" placeholder="Search by bed or patient ID...">
+            </div>
+            <div class="filter-tabs">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="CRITICAL">🔴 Critical</button>
+                <button class="filter-btn" data-filter="HIGH">🟠 High</button>
+                <button class="filter-btn" data-filter="MODERATE">🟡 Moderate</button>
+                <button class="filter-btn" data-filter="LOW">🟢 Low</button>
+            </div>
+        </section>
+        <section class="patient-grid" id="patientGrid">
+            <div class="loading-text">Loading patients...</div>
+        </section>
+    </main>
+
+    <!-- ══════════════════════════════════════════════════════
+         VIEW: Analytics
+         ══════════════════════════════════════════════════════ -->
+    <main class="view" id="viewAnalytics">
+        <section class="analytics-grid">
+            <!-- Prediction Volume -->
+            <div class="panel chart-panel wide">
+                <div class="panel-header">
+                    <h2>Prediction Volume (24h)</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Feature Importance Full Chart -->
+            <div class="panel chart-panel wide">
+                <div class="panel-header">
+                    <h2>Feature Importance (Top 15)</h2>
+                    <span class="badge indigo">SHAP</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="shapFullChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Model Metrics Table -->
+            <div class="panel table-panel wide">
+                <div class="panel-header">
+                    <h2>Model Performance Summary</h2>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table" id="modelTable">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>AUROC</th>
+                                <th>AUPRC</th>
+                                <th>F1</th>
+                                <th>Precision</th>
+                                <th>Recall</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modelTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calibration Stats -->
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <h2>Risk Level Distribution Over Time</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="riskTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Alert Distribution -->
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <h2>Alert Distribution</h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="alertChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ══════════════════════════════════════════════════════
+         Patient Detail Modal
+         ══════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="patientModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">✕</button>
+            <div class="modal-header" id="modalHeader">
+                <div class="modal-patient-info">
+                    <h2 id="modalBed">ICU-A1</h2>
+                    <span class="modal-risk-badge" id="modalRiskBadge">CRITICAL</span>
+                </div>
+                <div class="modal-deterioration">
+                    <span class="modal-prob" id="modalProb">78.5%</span>
+                    <span class="modal-prob-label">Deterioration Risk</span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Vitals Grid -->
+                <div class="modal-section">
+                    <h3>Vital Signs</h3>
+                    <div class="vitals-grid" id="modalVitals"></div>
+                </div>
+                <!-- Trend Chart -->
+                <div class="modal-section">
+                    <h3>Risk Trend (Last 2 Hours)</h3>
+                    <div class="modal-chart-container">
+                        <canvas id="modalTrendChart"></canvas>
+                    </div>
+                </div>
+                <!-- Risk Factors -->
+                <div class="modal-section">
+                    <h3>Top Risk Factors</h3>
+                    <div class="modal-risk-factors" id="modalRiskFactors"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>

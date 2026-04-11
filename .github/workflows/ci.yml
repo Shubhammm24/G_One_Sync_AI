@@ -1,0 +1,77 @@
+name: CI — Lint, Test & Validate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff pytest pytest-cov pytest-asyncio httpx
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Lint with Ruff
+        run: |
+          ruff check src/ config/ --ignore E501,F401
+
+      - name: Check imports
+        run: |
+          python -c "
+          import importlib
+          modules = [
+              'config.settings',
+              'src.ingestion.ingest_api',
+              'src.preprocessing.pipeline',
+              'src.modeling.base_trainer',
+              'src.modeling.losses',
+              'src.modeling.calibration',
+              'src.modeling.ensemble',
+              'src.monitoring.metrics_collector',
+              'src.monitoring.drift_detector',
+              'src.monitoring.alerting',
+              'src.serving.model_server',
+              'src.explainability.shap_explainer',
+          ]
+          for mod in modules:
+              try:
+                  importlib.import_module(mod)
+                  print(f'  ✅ {mod}')
+              except Exception as e:
+                  print(f'  ❌ {mod}: {e}')
+          "
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --cov=src --cov-report=term-missing --tb=short
+
+      - name: Upload coverage
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
