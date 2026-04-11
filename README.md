@@ -1,5 +1,5 @@
 <p align="center">
-  <h1 align="center">🏥 JeevanSync AI</h1>
+  <h1 align="center">🏥 G_One_Sync AI</h1>
   <p align="center">
     <strong>AI-Powered Early Clinical Deterioration Prediction System for ICU Patients</strong>
   </p>
@@ -34,7 +34,7 @@
 - [Performance Benchmarks](#-performance-benchmarks)
 - [Real-Time Clinical Dashboard](#-real-time-clinical-dashboard)
 - [Monitoring & Alerting](#-monitoring--alerting)
-- [Why JeevanSync AI Is Different](#-why-jeevansync-ai-is-different)
+- [Why G_One_Sync AI Is Different](#-why-g_one_sync-ai-is-different)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
 - [Docker Deployment](#-docker-deployment)
@@ -51,9 +51,9 @@
 
 ## 📄 Abstract
 
-**JeevanSync AI** is a production-grade clinical early warning system that predicts patient deterioration in Intensive Care Unit (ICU) settings **12 hours before onset**. It leverages a multi-model ensemble combining gradient-boosted trees (XGBoost), bidirectional LSTMs, and Transformer encoders to analyze high-frequency vital signs, laboratory results, and clinical context in real time.
+**G_One_Sync AI** is a production-grade clinical early warning system that predicts patient deterioration in Intensive Care Unit (ICU) settings **12 hours before onset**. It leverages a multi-model ensemble combining gradient-boosted trees (XGBoost), bidirectional LSTMs, and Transformer encoders to analyze high-frequency vital signs, laboratory results, and clinical context in real time.
 
-The system achieves an **Ensemble AUROC of 0.9579** and **AUPRC of 0.7018** on held-out test data — significantly outperforming traditional early warning scores (NEWS, MEWS, qSOFA) that rely on static thresholds. Unlike black-box approaches, JeevanSync AI provides **per-patient SHAP waterfall explanations**, **temporal attention heatmaps**, and **counterfactual what-if analysis**, enabling clinicians to understand *why* the model is alarming and *what* interventions could change the trajectory.
+The system achieves an **Ensemble AUROC of 0.9579** and **AUPRC of 0.7018** on held-out test data — significantly outperforming traditional early warning scores (NEWS, MEWS, qSOFA) that rely on static thresholds. Unlike black-box approaches, G_One_Sync AI provides **per-patient SHAP waterfall explanations**, **temporal attention heatmaps**, and **counterfactual what-if analysis**, enabling clinicians to understand *why* the model is alarming and *what* interventions could change the trajectory.
 
 **Key Contributions:**
 - **Multi-Architecture Ensemble**: Combines XGBoost (tabular), BiLSTM (sequential), and Transformer (attention-based) into a single learned-weight ensemble
@@ -81,7 +81,7 @@ Traditional early warning scores (NEWS, MEWS, qSOFA) suffer from critical limita
 
 ### Our Solution
 
-JeevanSync AI addresses each limitation:
+G_One_Sync AI addresses each limitation:
 
 - **Personalized risk curves** using patient-specific sliding windows and trend analysis
 - **Temporal modeling** with BiLSTM and Transformer architectures that capture 12-hour deterioration trajectories
@@ -95,7 +95,7 @@ JeevanSync AI addresses each limitation:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          JeevanSync AI — System Architecture               │
+│                          G_One_Sync AI — System Architecture                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
 │  ┌──────────────┐     ┌──────────────┐     ┌──────────────────────────┐     │
@@ -287,7 +287,9 @@ We integrate both **global** and **local** SHAP explanations:
 
 ## 📊 Performance Benchmarks
 
-### Model Comparison (Test Set)
+### Model Comparison (Internal Test Set)
+
+> All four rows below were evaluated on the **same held-out 15% test split** from our dataset, enabling a fair internal comparison.
 
 | Model | AUROC | AUPRC | F1 | Precision | Recall | Specificity |
 |---|---|---|---|---|---|---|
@@ -296,16 +298,18 @@ We integrate both **global** and **local** SHAP explanations:
 | Transformer | 0.9492 | 0.6423 | 0.6398 | 0.6320 | 0.6478 | 0.9779 |
 | **Ensemble** | **0.9579** | **0.7018** | **0.6921** | **0.7691** | **0.6292** | **0.9889** |
 
-### Comparison with Traditional Scores
+### Literature Comparison with Traditional Scoring Systems
 
-| System | AUROC | Sensitivity | Specificity | Real-Time | Explainable |
-|---|---|---|---|---|---|
-| NEWS (National Early Warning Score) | 0.73–0.79 | 42% | 87% | ❌ Manual | ❌ Score only |
-| MEWS (Modified EWS) | 0.68–0.74 | 30–40% | 85% | ❌ Manual | ❌ Score only |
-| qSOFA | 0.60–0.70 | 50% | 72% | ❌ Manual | ❌ Score only |
-| **JeevanSync AI** | **0.9579** | **62.9%** | **98.9%** | **✅ WebSocket** | **✅ SHAP + Attention** |
+> ⚠️ **Methodology Note**: This is a **literature-based comparison**, not a head-to-head evaluation on a shared dataset. NEWS/MEWS/qSOFA figures are drawn from peer-reviewed validation studies on real-world hospital cohorts (UK/US populations). G_One_Sync AI figures are from our internal held-out test set. Direct numerical comparison should be interpreted with caution — real-world production performance of our model may differ. A prospective clinical validation study is required before deployment.
 
-> Our system achieves a **30%+ absolute improvement in AUROC** over NEWS/MEWS while maintaining **98.9% specificity**, effectively eliminating alert fatigue.
+| System | AUROC | Sensitivity | Specificity | Real-Time | Explainable | Source |
+|---|---|---|---|---|---|---|
+| NEWS (National Early Warning Score) | 0.73–0.79 | 42% | 87% | ❌ Manual | ❌ Score only | Smith et al., 2013 |
+| MEWS (Modified EWS) | 0.68–0.74 | 30–40% | 85% | ❌ Manual | ❌ Score only | Subbe et al., 2001 |
+| qSOFA | 0.60–0.70 | 50% | 72% | ❌ Manual | ❌ Score only | Seymour et al., 2016 |
+| **G_One_Sync AI** | **0.9579** | **62.9%** | **98.9%** | **✅ WebSocket** | **✅ SHAP + Attention** | *This work (internal test set)* |
+
+> On our internal evaluation, G_One_Sync AI demonstrates a **~20–30 percentage point improvement in AUROC** relative to traditional scoring systems as reported in published literature. The extremely high specificity (98.9%) at the clinical operating threshold suggests significantly reduced alert burden compared to threshold-based systems.
 
 ---
 
@@ -384,9 +388,9 @@ Exposes standard metrics at `/metrics` for Grafana integration:
 
 ---
 
-## 🆚 Why JeevanSync AI Is Different
+## 🆚 Why G_One_Sync AI Is Different
 
-| Aspect | Traditional EWS | Single-Model ML | **JeevanSync AI** |
+| Aspect | Traditional EWS | Single-Model ML | **G_One_Sync AI** |
 |---|---|---|---|
 | **Architecture** | Static scoring | Single model (usually XGBoost) | **Multi-model ensemble (XGB + BiLSTM + Transformer)** |
 | **Temporal Modeling** | ❌ None | Minimal | **✅ BiLSTM + Transformer attention over 12h windows** |
@@ -572,6 +576,8 @@ JEEVAN_FEATURE_PREDICTION_HORIZON=12
 JEEVAN_API_PORT=8000
 ```
 
+> **Note on env prefix**: The `JEEVAN_` prefix in environment variables is from the original internal codebase configuration. These are code-level variable names and do not affect project branding.
+
 ---
 
 ## 🧪 Testing
@@ -675,12 +681,12 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ## 📚 Citation
 
-If you use JeevanSync AI in your research, please cite:
+If you use G_One_Sync AI in your research, please cite:
 
 ```bibtex
-@software{jeevansync_ai_2026,
-  title     = {JeevanSync AI: AI-Powered Early Clinical Deterioration Prediction System},
-  author    = {JeevanSync AI Team},
+@software{g_one_sync_ai_2026,
+  title     = {G_One_Sync AI: AI-Powered Early Clinical Deterioration Prediction System},
+  author    = {G_One_Sync AI Team},
   year      = {2026},
   version   = {1.0.0},
   url       = {https://github.com/yourusername/G_One_Sync_AI},
@@ -697,6 +703,9 @@ If you use JeevanSync AI in your research, please cite:
 - **MIMIC-IV Database**: Johnson, A., et al. (2023). MIMIC-IV Clinical Database. PhysioNet.
 - **SHAP**: Lundberg, S.M. & Lee, S.I. (2017). A Unified Approach to Interpreting Model Predictions. NeurIPS.
 - **XGBoost**: Chen, T. & Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. KDD.
+- **NEWS Validation**: Smith, G.B., et al. (2013). The ability of the National Early Warning Score (NEWS) to discriminate patients at risk of early cardiac arrest, unanticipated intensive care unit admission, and death. *Resuscitation*.
+- **MEWS Validation**: Subbe, C.P., et al. (2001). Validation of a modified Early Warning Score in medical admissions. *QJM*.
+- **qSOFA Validation**: Seymour, C.W., et al. (2016). Assessment of Clinical Criteria for Sepsis. *JAMA*.
 
 ---
 
