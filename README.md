@@ -266,7 +266,7 @@ We integrate both **global** and **local** SHAP explanations:
 
 #### Global Feature Importance (Top 10)
 
-| Rank | Feature | Mean |SHAP| | Clinical Meaning |
+| Rank | Feature | Mean \|SHAP\| | Clinical Meaning |
 |---|---|---|---|
 | 1 | `lactate_delta` | 1.0199 | Acute metabolic decompensation |
 | 2 | `creatinine_delta` | 0.6457 | Renal function trajectory |
