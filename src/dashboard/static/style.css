@@ -587,3 +587,414 @@ body {
     .patient-grid { grid-template-columns: 1fr; }
     .vitals-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW FEATURES — Styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ═══ Feature 6: System Health Widget ══════════════════════ */
+
+.system-health-strip { margin-top: 1.5rem; }
+
+.system-health-panel { border-left: 3px solid var(--risk-low); }
+.system-health-panel.degraded { border-left-color: var(--risk-high); }
+
+.health-status {
+    font-size: 0.75rem; font-weight: 600;
+    color: var(--risk-low);
+}
+
+.health-status.degraded { color: var(--risk-high); }
+.health-status.error { color: var(--risk-critical); }
+
+.health-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem; padding: 1rem 1.25rem;
+}
+
+.health-item {
+    background: var(--bg-glass); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.6rem 0.75rem;
+    display: flex; flex-direction: column; gap: 0.2rem;
+}
+
+.health-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.health-value { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+.health-value.mono { font-family: var(--font-mono); }
+.health-value.fresh { color: var(--risk-low); }
+.health-value.stale { color: var(--risk-critical); }
+
+/* ═══ Feature 1: Risk Trajectory ═══════════════════════════ */
+
+.trajectory-tabs { display: flex; gap: 0.25rem; margin-bottom: 0.75rem; }
+
+.traj-tab {
+    padding: 0.3rem 0.7rem; font-size: 0.7rem; font-weight: 600;
+    background: var(--bg-glass); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text-secondary); cursor: pointer;
+    transition: all 0.2s; font-family: var(--font-main);
+}
+
+.traj-tab:hover { border-color: var(--border-hover); color: var(--text-primary); }
+.traj-tab.active { background: rgba(99,102,241,0.15); border-color: var(--accent-indigo); color: var(--accent-indigo); }
+
+.modal-chart-container.tall { height: 250px; }
+
+.baseline-legend {
+    display: flex; gap: 1.5rem; margin-top: 0.5rem;
+    font-size: 0.65rem; color: var(--text-muted); flex-wrap: wrap;
+}
+
+.legend-item { display: flex; align-items: center; gap: 0.3rem; }
+.legend-line { width: 20px; height: 2px; border-radius: 1px; }
+
+/* ═══ Feature 2: SHAP Waterfall ════════════════════════════ */
+
+.waterfall-container { padding: 0.5rem 0; }
+
+.waterfall-bar-row {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.4rem; padding: 0.35rem 0;
+}
+
+.wf-feature {
+    font-size: 0.72rem; color: var(--text-secondary); width: 130px;
+    text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.wf-bar-area { flex: 1; position: relative; height: 20px; }
+
+.wf-bar {
+    position: absolute; height: 100%; border-radius: 4px;
+    transition: width 0.6s ease, left 0.6s ease;
+    display: flex; align-items: center; justify-content: flex-end; padding: 0 4px;
+}
+
+.wf-bar.risk { background: linear-gradient(90deg, rgba(239,68,68,0.3), rgba(239,68,68,0.6)); }
+.wf-bar.protective { background: linear-gradient(90deg, rgba(34,197,94,0.6), rgba(34,197,94,0.3)); }
+
+.wf-shap-val {
+    font-family: var(--font-mono); font-size: 0.6rem; font-weight: 600;
+    white-space: nowrap; margin-left: 0.3rem;
+}
+
+.wf-shap-val.risk { color: var(--risk-critical); }
+.wf-shap-val.protective { color: var(--risk-low); }
+
+.wf-value {
+    font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-dim);
+    width: 50px; text-align: right;
+}
+
+.waterfall-summary {
+    margin-top: 0.75rem; padding: 0.75rem;
+    background: var(--bg-glass); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 0.75rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+.wf-summary-label { color: var(--text-muted); }
+.wf-summary-value { font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem; }
+
+/* ═══ Feature 2b: What-If Sliders ══════════════════════════ */
+
+.whatif-container { display: flex; flex-direction: column; gap: 1rem; }
+
+.whatif-sliders { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.whatif-slider-row {
+    display: grid; grid-template-columns: 100px 1fr 90px;
+    align-items: center; gap: 0.75rem;
+}
+
+.whatif-slider-row label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+
+.whatif-range {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 6px;
+    background: rgba(255,255,255,0.06); border-radius: 3px;
+    outline: none; cursor: pointer;
+}
+
+.whatif-range::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--accent-indigo); border: 2px solid var(--bg-secondary);
+    cursor: pointer; box-shadow: 0 0 8px rgba(99,102,241,0.3);
+}
+
+.whatif-val { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-primary); font-weight: 500; }
+
+.whatif-result {
+    display: flex; align-items: center; justify-content: center;
+    gap: 1.5rem; padding: 1rem;
+    background: var(--bg-glass); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.whatif-current, .whatif-projected { text-align: center; }
+.whatif-label { font-size: 0.65rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem; }
+.whatif-score { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 800; }
+.whatif-arrow { font-size: 1.5rem; color: var(--text-dim); }
+
+.whatif-delta {
+    font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;
+    padding: 0.3rem 0.6rem; border-radius: 6px;
+}
+
+.whatif-delta.positive { background: var(--risk-critical-bg); color: var(--risk-critical); }
+.whatif-delta.negative { background: var(--risk-low-bg); color: var(--risk-low); }
+.whatif-delta.neutral { background: var(--bg-glass); color: var(--text-muted); }
+
+/* ═══ Feature 3: ECG/PPG Waveforms ═════════════════════════ */
+
+.waveform-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+.waveform-panel {
+    background: #050810; border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 0.5rem 0.75rem 0.25rem; overflow: hidden;
+}
+
+.waveform-label {
+    font-size: 0.7rem; font-weight: 600; color: var(--accent-cyan);
+    margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: space-between;
+}
+
+.waveform-hr { font-family: var(--font-mono); color: var(--risk-low); font-size: 0.65rem; }
+.waveform-sub { font-size: 0.6rem; color: var(--text-dim); font-weight: 400; }
+
+.waveform-canvas {
+    width: 100%; height: 80px; display: block;
+    border-radius: 4px;
+}
+
+/* ═══ Feature 4: Attention Heatmap ═════════════════════════ */
+
+.attention-container { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.attention-heatmap {
+    display: flex; gap: 2px; height: 50px;
+    border-radius: var(--radius-sm); overflow: hidden;
+}
+
+.attn-cell {
+    flex: 1; position: relative; border-radius: 2px;
+    transition: all 0.3s ease; cursor: default;
+    min-width: 6px;
+}
+
+.attn-cell:hover { transform: scaleY(1.15); }
+
+.attn-cell.critical-window {
+    outline: 2px solid var(--risk-critical);
+    outline-offset: 1px;
+    animation: attnPulse 1.5s infinite;
+}
+
+@keyframes attnPulse {
+    0%, 100% { outline-color: var(--risk-critical); }
+    50% { outline-color: rgba(239,68,68,0.3); }
+}
+
+.attn-cell .attn-tooltip {
+    display: none; position: absolute; bottom: 110%;
+    left: 50%; transform: translateX(-50%);
+    background: var(--bg-secondary); border: 1px solid var(--border);
+    border-radius: 6px; padding: 0.35rem 0.5rem;
+    font-size: 0.65rem; font-family: var(--font-mono);
+    white-space: nowrap; z-index: 5; pointer-events: none;
+}
+
+.attn-cell:hover .attn-tooltip { display: block; }
+
+.attention-interpretation {
+    padding: 0.75rem; background: var(--bg-glass);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5;
+    border-left: 3px solid var(--accent-indigo);
+}
+
+/* ═══ Feature 5: Intervention Window ═══════════════════════ */
+
+.intervention-container {
+    display: grid; grid-template-columns: auto 1fr;
+    gap: 2rem; align-items: flex-start;
+}
+
+.intervention-countdown { text-align: center; }
+
+.countdown-ring {
+    width: 120px; height: 120px; position: relative;
+    margin: 0 auto 0.5rem;
+}
+
+.countdown-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+
+.countdown-bg {
+    fill: none; stroke: rgba(255,255,255,0.04);
+    stroke-width: 6;
+}
+
+.countdown-progress {
+    fill: none; stroke: var(--risk-high);
+    stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 326.7; stroke-dashoffset: 163;
+    transition: stroke-dashoffset 1s ease, stroke 0.5s;
+}
+
+.countdown-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+
+.countdown-value { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 800; }
+.countdown-unit { font-size: 0.6rem; color: var(--text-muted); }
+.intervention-note { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; }
+
+.protocol-links h4 { font-size: 0.8rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--text-secondary); }
+
+.protocol-buttons { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.protocol-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 0.85rem; background: var(--bg-glass);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-primary); font-size: 0.75rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; font-family: var(--font-main);
+    text-align: left;
+}
+
+.protocol-btn:hover { border-color: var(--accent-indigo); background: rgba(99,102,241,0.08); }
+.protocol-btn .proto-icon { font-size: 1rem; }
+
+/* Protocol Checklist */
+.protocol-checklist-section {
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    background: rgba(99,102,241,0.03);
+    animation: fadeIn 0.3s ease;
+}
+
+.protocol-checklist { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.proto-step {
+    display: grid; grid-template-columns: 28px 1fr auto;
+    align-items: center; gap: 0.5rem;
+    padding: 0.5rem 0.6rem; background: var(--bg-glass);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 0.75rem; transition: all 0.2s;
+}
+
+.proto-step:hover { border-color: var(--border-hover); }
+
+.proto-step-num {
+    font-family: var(--font-mono); font-size: 0.65rem; font-weight: 700;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    background: rgba(99,102,241,0.12); border-radius: 50%; color: var(--accent-indigo);
+}
+
+.proto-priority {
+    font-size: 0.6rem; font-weight: 600; padding: 0.1rem 0.4rem;
+    border-radius: 3px; text-transform: uppercase;
+}
+
+.proto-priority.immediate { background: var(--risk-critical-bg); color: var(--risk-critical); }
+.proto-priority.urgent { background: var(--risk-high-bg); color: var(--risk-high); }
+.proto-priority.standby { background: var(--risk-moderate-bg); color: var(--risk-moderate); }
+
+/* ═══ Feature 7: Audio Alarm Overlay ═══════════════════════ */
+
+.alarm-overlay {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(220, 38, 38, 0.08);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    animation: alarmFlash 1s infinite;
+}
+
+.alarm-overlay.active { display: flex; }
+
+@keyframes alarmFlash {
+    0%, 100% { background: rgba(220, 38, 38, 0.06); }
+    50% { background: rgba(220, 38, 38, 0.12); }
+}
+
+.alarm-content {
+    background: var(--bg-secondary);
+    border: 2px solid var(--risk-critical);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem 3rem;
+    text-align: center;
+    animation: alarmBounce 0.5s ease;
+    box-shadow: 0 0 60px rgba(239, 68, 68, 0.3), 0 0 120px rgba(239, 68, 68, 0.1);
+    max-width: 500px;
+}
+
+@keyframes alarmBounce {
+    0% { transform: scale(0.8); opacity: 0; }
+    60% { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.alarm-icon { font-size: 4rem; margin-bottom: 0.75rem; animation: alarmShake 0.5s infinite; }
+
+@keyframes alarmShake {
+    0%, 100% { transform: rotate(0); }
+    25% { transform: rotate(-8deg); }
+    75% { transform: rotate(8deg); }
+}
+
+.alarm-title {
+    font-size: 1.5rem; font-weight: 900; color: var(--risk-critical);
+    letter-spacing: 0.1em; margin-bottom: 0.5rem;
+}
+
+.alarm-message { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; }
+
+.alarm-patient {
+    font-family: var(--font-mono); font-size: 1.2rem; font-weight: 700;
+    color: var(--text-primary); margin-bottom: 1.5rem;
+}
+
+.alarm-actions { display: flex; gap: 0.75rem; justify-content: center; }
+
+.alarm-btn {
+    padding: 0.75rem 1.5rem; font-size: 0.85rem; font-weight: 600;
+    border-radius: var(--radius-md); cursor: pointer; border: none;
+    transition: all 0.2s; font-family: var(--font-main);
+}
+
+.alarm-btn.acknowledge {
+    background: var(--risk-low); color: #000;
+}
+
+.alarm-btn.acknowledge:hover { background: #16a34a; transform: translateY(-2px); }
+
+.alarm-btn.view {
+    background: var(--bg-glass); color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.alarm-btn.view:hover { border-color: var(--accent-indigo); background: rgba(99,102,241,0.1); }
+
+/* Border flash on body when alarm active */
+body.alarm-active {
+    animation: borderFlash 1s infinite;
+}
+
+@keyframes borderFlash {
+    0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+    50% { box-shadow: inset 0 0 0 3px rgba(239, 68, 68, 0.4); }
+}
+
+/* Widescreen modal for more content */
+.modal-content { max-width: 800px; }
+
+@media (max-width: 768px) {
+    .waveform-row { grid-template-columns: 1fr; }
+    .intervention-container { grid-template-columns: 1fr; }
+    .whatif-slider-row { grid-template-columns: 80px 1fr 70px; }
+    .health-grid { grid-template-columns: repeat(2, 1fr); }
+}

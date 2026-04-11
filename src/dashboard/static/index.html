@@ -200,6 +200,50 @@
                 </div>
             </div>
         </section>
+
+        <!-- System Health & Data Freshness Widget -->
+        <section class="system-health-strip">
+            <div class="panel system-health-panel">
+                <div class="panel-header">
+                    <h2>🩺 System Health & Data Freshness</h2>
+                    <span class="health-status" id="healthStatus">● Checking...</span>
+                </div>
+                <div class="health-grid" id="healthGrid">
+                    <div class="health-item">
+                        <span class="health-label">Last Ingestion</span>
+                        <span class="health-value mono" id="lastIngestion">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Data Freshness</span>
+                        <span class="health-value mono" id="dataFreshness">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Kafka Lag</span>
+                        <span class="health-value mono" id="kafkaLag">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Model Latency</span>
+                        <span class="health-value mono" id="modelLatency">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">DB Query</span>
+                        <span class="health-value mono" id="dbQuery">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Uptime</span>
+                        <span class="health-value mono" id="systemUptime">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Predictions (24h)</span>
+                        <span class="health-value mono" id="predCount24">—</span>
+                    </div>
+                    <div class="health-item">
+                        <span class="health-label">Avg Latency</span>
+                        <span class="health-value mono" id="avgLatency">—</span>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- ══════════════════════════════════════════════════════
@@ -328,6 +372,145 @@
                     <h3>Top Risk Factors</h3>
                     <div class="modal-risk-factors" id="modalRiskFactors"></div>
                 </div>
+
+                <!-- ═══ NEW: Feature 1 — Risk Trajectory vs Clinical Baselines ═══ -->
+                <div class="modal-section">
+                    <h3>📈 Risk Trajectory vs. Vitals (6h)</h3>
+                    <div class="trajectory-tabs">
+                        <button class="traj-tab active" data-vital="heart_rate">HR</button>
+                        <button class="traj-tab" data-vital="systolic_bp">BP</button>
+                        <button class="traj-tab" data-vital="spo2">SpO₂</button>
+                        <button class="traj-tab" data-vital="respiratory_rate">RR</button>
+                        <button class="traj-tab" data-vital="lactate">Lactate</button>
+                    </div>
+                    <div class="modal-chart-container tall">
+                        <canvas id="trajectoryChart"></canvas>
+                    </div>
+                    <div class="baseline-legend" id="baselineLegend"></div>
+                </div>
+
+                <!-- ═══ NEW: Feature 2 — SHAP Waterfall Plot ═══ -->
+                <div class="modal-section">
+                    <h3>🔬 SHAP Waterfall — Feature Contributions</h3>
+                    <div class="waterfall-container" id="waterfallContainer">
+                        <div class="loading-text">Loading SHAP...</div>
+                    </div>
+                    <div class="waterfall-summary" id="waterfallSummary"></div>
+                </div>
+
+                <!-- ═══ NEW: Feature 2b — What-If / Counterfactual Analysis ═══ -->
+                <div class="modal-section">
+                    <h3>🎛️ What-If Analysis — Intervention Simulator</h3>
+                    <div class="whatif-container">
+                        <div class="whatif-sliders">
+                            <div class="whatif-slider-row">
+                                <label>Systolic BP</label>
+                                <input type="range" id="wiBP" min="60" max="180" value="120" class="whatif-range">
+                                <span class="whatif-val" id="wiBPVal">120 mmHg</span>
+                            </div>
+                            <div class="whatif-slider-row">
+                                <label>Heart Rate</label>
+                                <input type="range" id="wiHR" min="40" max="160" value="80" class="whatif-range">
+                                <span class="whatif-val" id="wiHRVal">80 bpm</span>
+                            </div>
+                            <div class="whatif-slider-row">
+                                <label>Lactate</label>
+                                <input type="range" id="wiLac" min="3" max="100" value="10" step="1" class="whatif-range">
+                                <span class="whatif-val" id="wiLacVal">1.0 mmol/L</span>
+                            </div>
+                            <div class="whatif-slider-row">
+                                <label>SpO₂</label>
+                                <input type="range" id="wiSpO2" min="80" max="100" value="97" class="whatif-range">
+                                <span class="whatif-val" id="wiSpO2Val">97%</span>
+                            </div>
+                        </div>
+                        <div class="whatif-result" id="whatifResult">
+                            <div class="whatif-current">
+                                <span class="whatif-label">Current Risk</span>
+                                <span class="whatif-score" id="wiCurrentRisk">—</span>
+                            </div>
+                            <div class="whatif-arrow">→</div>
+                            <div class="whatif-projected">
+                                <span class="whatif-label">Projected Risk</span>
+                                <span class="whatif-score" id="wiProjectedRisk">—</span>
+                            </div>
+                            <div class="whatif-delta" id="wiDelta"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ NEW: Feature 3 — ECG & PPG Waveforms ═══ -->
+                <div class="modal-section">
+                    <h3>💓 Live Waveforms</h3>
+                    <div class="waveform-row">
+                        <div class="waveform-panel">
+                            <div class="waveform-label">ECG <span class="waveform-hr" id="wfHR">— bpm</span></div>
+                            <canvas id="ecgCanvas" class="waveform-canvas"></canvas>
+                        </div>
+                        <div class="waveform-panel">
+                            <div class="waveform-label">PPG <span class="waveform-sub">(Photoplethysmography)</span></div>
+                            <canvas id="ppgCanvas" class="waveform-canvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ NEW: Feature 4 — Temporal Attention Heatmap ═══ -->
+                <div class="modal-section">
+                    <h3>🧠 Model Attention Heatmap (6h)</h3>
+                    <div class="attention-container">
+                        <div class="attention-heatmap" id="attentionHeatmap"></div>
+                        <div class="attention-interpretation" id="attentionInterpretation"></div>
+                    </div>
+                </div>
+
+                <!-- ═══ NEW: Feature 5 — Intervention Window & Protocol Links ═══ -->
+                <div class="modal-section">
+                    <h3>⏱️ Predicted Intervention Window</h3>
+                    <div class="intervention-container">
+                        <div class="intervention-countdown">
+                            <div class="countdown-ring">
+                                <svg viewBox="0 0 120 120">
+                                    <circle cx="60" cy="60" r="52" class="countdown-bg"/>
+                                    <circle cx="60" cy="60" r="52" class="countdown-progress" id="countdownRing"/>
+                                </svg>
+                                <div class="countdown-inner">
+                                    <span class="countdown-value" id="countdownValue">—</span>
+                                    <span class="countdown-unit">hours left</span>
+                                </div>
+                            </div>
+                            <p class="intervention-note">Estimated time before critical threshold</p>
+                        </div>
+                        <div class="protocol-links">
+                            <h4>📋 Recommended Protocols</h4>
+                            <div class="protocol-buttons" id="protocolButtons"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Protocol Checklist (expandable) -->
+                <div class="modal-section protocol-checklist-section" id="protocolSection" style="display:none">
+                    <h3 id="protocolTitle">Protocol Checklist</h3>
+                    <div class="protocol-checklist" id="protocolChecklist"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Audio Alarm for Critical Alerts ═══ -->
+    <audio id="alarmAudio" loop preload="auto">
+        <source src="data:audio/wav;base64,UklGRl4FAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YToFAAB/f39/f39/f4CAgICBgYGBgoKCgoODg4OEhISEhYWFhYaGhoaHh4eHiIiIiImJiYmKioqKi4uLi4yMjIyNjY2Njo6Ojo+Pj4+QkJCQkZGRkZKSkpKTk5OTlJSUlJWVlZWWlpaWl5eXl5iYmJiZmZmZmpqampubm5ucnJycnZ2dnZ6enp6fn5+foKCgoKGhoaGioqKio6Ojo6SkpKSlpaWlpqampqenp6eoqKioqampqaqqqqq" type="audio/wav">
+    </audio>
+
+    <!-- ═══ Visual Alarm Overlay ═══ -->
+    <div class="alarm-overlay" id="alarmOverlay">
+        <div class="alarm-content">
+            <div class="alarm-icon">🚨</div>
+            <h2 class="alarm-title">CRITICAL ALERT</h2>
+            <p class="alarm-message" id="alarmMessage">Patient requires immediate attention!</p>
+            <div class="alarm-patient" id="alarmPatient"></div>
+            <div class="alarm-actions">
+                <button class="alarm-btn acknowledge" id="alarmAck">✓ Acknowledge</button>
+                <button class="alarm-btn view" id="alarmView">View Patient</button>
             </div>
         </div>
     </div>
