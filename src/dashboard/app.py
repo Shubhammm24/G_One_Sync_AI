@@ -104,18 +104,20 @@ async def dashboard():
 @app.get("/api/metrics")
 async def get_metrics():
     """System and model metrics snapshot."""
-    import torch
-
     gpu_info = {}
-    if torch.cuda.is_available():
-        gpu_info = {
-            "name": torch.cuda.get_device_name(0),
-            "memory_used_gb": round(torch.cuda.memory_allocated(0) / 1e9, 2),
-            "memory_total_gb": round(torch.cuda.get_device_properties(0).total_mem / 1e9, 2),
-            "utilization_pct": round(
-                torch.cuda.memory_allocated(0) / torch.cuda.get_device_properties(0).total_mem * 100, 1
-            ),
-        }
+    try:
+        import torch
+        if torch.cuda.is_available():
+            gpu_info = {
+                "name": torch.cuda.get_device_name(0),
+                "memory_used_gb": round(torch.cuda.memory_allocated(0) / 1e9, 2),
+                "memory_total_gb": round(torch.cuda.get_device_properties(0).total_memory / 1e9, 2),
+                "utilization_pct": round(
+                    torch.cuda.memory_allocated(0) / torch.cuda.get_device_properties(0).total_memory * 100, 1
+                ),
+            }
+    except Exception:
+        pass
 
     # Load training results — use absolute path from project root
     project_root = Path(__file__).parent.parent.parent
@@ -485,8 +487,6 @@ async def get_patient_attention(pid: int, hours: int = 6):
 @app.get("/api/system/health")
 async def get_system_health():
     """System health, data freshness, and pipeline status."""
-    import torch
-
     global _last_ingestion_time
     _last_ingestion_time = time.time() - np.random.uniform(0.5, 3.0)  # Simulated
 
@@ -494,12 +494,12 @@ async def get_system_health():
     hours = int(uptime // 3600)
     minutes = int((uptime % 3600) // 60)
 
-    gpu_ok = torch.cuda.is_available() if 'torch' in dir() else False
+    gpu_ok = False
     try:
-        import torch as t
-        gpu_ok = t.cuda.is_available()
-    except Exception:
-        gpu_ok = False
+        import torch
+        gpu_ok = torch.cuda.is_available()
+    except (ImportError, Exception):
+        pass
 
     freshness_sec = time.time() - _last_ingestion_time
     data_fresh = freshness_sec < 10  # Consider stale if > 10s

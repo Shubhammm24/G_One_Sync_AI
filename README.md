@@ -26,7 +26,7 @@
 - [Architecture Overview](#-architecture-overview)
 - [Model Pipeline](#-model-pipeline)
   - [Data Ingestion & Preprocessing](#1-data-ingestion--preprocessing)
-  - [Feature Engineering](#2-feature-engineering)
+  - [Feature Engineering](#2-feature-engineering)a
   - [Model Training](#3-model-training)
   - [Ensemble Strategy](#4-ensemble-strategy)
   - [Calibration & Threshold Optimization](#5-calibration--threshold-optimization)
