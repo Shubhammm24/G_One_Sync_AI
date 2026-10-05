@@ -76,6 +76,23 @@ services:
       --host 0.0.0.0
       --port 5000
 
+  # ── HL7v2 MLLP Listener (EMR profile only) ─────────────────
+  hl7-listener:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: g-one-sync-hl7
+    ports:
+      - "2575:2575"
+    environment:
+      - JEEVAN_EMR_ENABLED=true
+      - JEEVAN_EMR_HL7_ENABLED=true
+      - JEEVAN_EMR_HL7_MLLP_PORT=2575
+    command: ["python3", "-m", "src.ingestion.emr.hl7_listener"]
+    restart: unless-stopped
+    profiles:
+      - emr
+
 volumes:
   redpanda-data:
   mlflow-data:

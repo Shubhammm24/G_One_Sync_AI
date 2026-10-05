@@ -6,9 +6,9 @@ Uses pydantic-settings for validation and .env file support.
 """
 
 from pathlib import Path
-from pydantic_settings import BaseSettings
-from pydantic import Field, ConfigDict
 
+from pydantic import ConfigDict, Field
+from pydantic_settings import BaseSettings
 
 # ── Project root detection ───────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -157,6 +157,35 @@ class ServingSettings(BaseSettings):
     model_config = ConfigDict(env_prefix="JEEVAN_SERVING_")
 
 
+class EMRSettings(BaseSettings):
+    """EMR/EHR integration settings (HL7v2 + FHIR R4)."""
+
+    # Master toggle — off by default
+    emr_enabled: bool = False
+
+    # FHIR R4 Configuration
+    fhir_base_url: str = "https://ehr.hospital.org/fhir/R4"
+    fhir_client_id: str = ""
+    fhir_client_secret: str = ""
+    fhir_auth_token_url: str = ""
+    fhir_timeout_s: int = 30
+    fhir_polling_interval_s: int = 60
+    fhir_subscription_enabled: bool = True
+
+    # HL7v2 MLLP Configuration
+    hl7_mllp_host: str = "0.0.0.0"
+    hl7_mllp_port: int = 2575
+    hl7_enabled: bool = False
+
+    # Audit trail
+    audit_log_dir: Path = PROJECT_ROOT / "data" / "audit"
+
+    # Data source tagging (for provenance tracking)
+    emr_source_tag: str = "emr-fhir"
+
+    model_config = ConfigDict(env_prefix="JEEVAN_EMR_")
+
+
 # ── Singleton instances ──────────────────────────────────────────────────
 data_settings = DataSettings()
 kafka_settings = KafkaSettings()
@@ -164,3 +193,4 @@ feature_settings = FeatureSettings()
 api_settings = APISettings()
 model_settings = ModelSettings()
 serving_settings = ServingSettings()
+emr_settings = EMRSettings()

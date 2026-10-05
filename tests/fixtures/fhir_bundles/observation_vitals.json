@@ -1,0 +1,37 @@
+{
+  "resourceType": "Observation",
+  "id": "obs-vitals-hr-001",
+  "status": "final",
+  "category": [
+    {
+      "coding": [
+        {
+          "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+          "code": "vital-signs",
+          "display": "Vital Signs"
+        }
+      ]
+    }
+  ],
+  "code": {
+    "coding": [
+      {
+        "system": "http://loinc.org",
+        "code": "8867-4",
+        "display": "Heart rate"
+      }
+    ],
+    "text": "Heart rate"
+  },
+  "subject": {
+    "reference": "Patient/12345",
+    "display": "Test Patient"
+  },
+  "effectiveDateTime": "2026-10-06T10:00:00Z",
+  "valueQuantity": {
+    "value": 88.0,
+    "unit": "beats/min",
+    "system": "http://unitsofmeasure.org",
+    "code": "/min"
+  }
+}

@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from config.settings import api_settings, kafka_settings
+from config.settings import api_settings, emr_settings, kafka_settings
 from src.ingestion.data_lake_router import DataLakeRouter
 from src.ingestion.kafka_producer import get_producer
 from src.ingestion.schemas import (
@@ -27,7 +27,6 @@ from src.ingestion.schemas import (
     LabResultsPayload,
     VitalSignsPayload,
 )
-
 
 # ── Lifespan (startup / shutdown) ────────────────────────────────────────
 
@@ -271,6 +270,13 @@ async def list_partitions(
     """List available date partitions in the data lake."""
     partitions = app.state.data_lake.list_partitions(data_type=data_type)
     return {"data_type": data_type, "partitions": partitions, "count": len(partitions)}
+
+
+# ── Optional EMR Integration ─────────────────────────────────────────────
+if emr_settings.emr_enabled:
+    from src.ingestion.emr.fhir_subscription import fhir_router
+    app.include_router(fhir_router, prefix="/emr/fhir", tags=["EMR-FHIR"])
+    logger.info("EMR FHIR integration enabled at /emr/fhir/*")
 
 
 # ── CLI entrypoint ───────────────────────────────────────────────────────
