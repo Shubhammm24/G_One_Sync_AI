@@ -52,3 +52,8 @@ Thumbs.db
 htmlcov/
 
 models.v2/
+
+# ---- Project Docs & Agent Config ----
+Minor Project format 2025.docx
+minor_project_extracted.txt
+AGENTS.md
