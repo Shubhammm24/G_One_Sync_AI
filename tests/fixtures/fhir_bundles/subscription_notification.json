@@ -1,0 +1,8 @@
+{
+  "subscriptionId": "sub-icu-deterioration-001",
+  "resourceType": "Observation",
+  "resourceId": "obs-vitals-hr-001",
+  "patientReference": "Patient/12345",
+  "eventType": "create",
+  "timestamp": "2026-10-06T02:00:00Z"
+}

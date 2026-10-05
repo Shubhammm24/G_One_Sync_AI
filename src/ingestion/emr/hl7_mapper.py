@@ -7,7 +7,7 @@ Same pattern as FHIRMapper but for HL7v2 data.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from loguru import logger
@@ -203,7 +203,7 @@ class HL7Mapper:
                     dob = None
 
                 if dob:
-                    now = datetime.utcnow()
+                    now = datetime.now(timezone.utc)
                     age = now.year - dob.year
                     if (now.month, now.day) < (dob.month, dob.day):
                         age -= 1

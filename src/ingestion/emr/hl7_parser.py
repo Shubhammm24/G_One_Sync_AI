@@ -72,6 +72,9 @@ class HL7Parser:
         Raises:
             HL7ParseError: If message format is invalid
         """
+        # Normalize newlines to HL7 standard carriage return (\r)
+        raw_message = raw_message.replace("\r\n", "\r").replace("\n", "\r").strip()
+
         try:
             from hl7apy.exceptions import HL7apyException
             from hl7apy.parser import parse_message as hl7_parse
@@ -79,7 +82,10 @@ class HL7Parser:
             msg = hl7_parse(raw_message, find_groups=False)
 
             # Extract MSH segment for message type
-            msh = msg.segment("MSH")
+            msh = getattr(msg, "msh", None) or next((c for c in msg.children if c.name == "MSH"), None)
+            if msh is None:
+                raise HL7ParseError("Missing MSH segment in HL7 message")
+
             message_type = str(msh.msh_9.msh_9_1.value)
             trigger_event = str(msh.msh_9.msh_9_2.value)
             full_type = f"{message_type}^{trigger_event}"
@@ -126,13 +132,13 @@ class HL7Parser:
 
         try:
             # Extract patient ID from PID segment
-            pid = msg.segment("PID")
-            patient_id = str(pid.pid_3.value) if pid.pid_3 else ""
+            pid = getattr(msg, "pid", None) or next((c for c in msg.children if c.name == "PID"), None)
+            patient_id = str(pid.pid_3.value).split("^")[0] if pid and pid.pid_3 else ""
         except Exception:
             patient_id = ""
 
         try:
-            obx_segments = msg.segments("OBX")
+            obx_segments = [c for c in msg.children if c.name == "OBX"]
         except Exception:
             obx_segments = []
 
@@ -197,20 +203,20 @@ class HL7Parser:
         }
 
         try:
-            pid = msg.segment("PID")
+            pid = getattr(msg, "pid", None) or next((c for c in msg.children if c.name == "PID"), None)
 
             # PID-3: Patient Identifier List
-            if pid.pid_3:
+            if pid and pid.pid_3:
                 patient["patient_id"] = str(pid.pid_3.value).split("^")[0]
 
             # PID-7: Date of Birth (YYYYMMDD)
-            if pid.pid_7:
+            if pid and pid.pid_7:
                 dob = str(pid.pid_7.value)
                 if len(dob) >= 8:
                     patient["birth_date"] = f"{dob[:4]}-{dob[4:6]}-{dob[6:8]}"
 
             # PID-8: Sex
-            if pid.pid_8:
+            if pid and pid.pid_8:
                 sex_val = str(pid.pid_8.value).upper()
                 patient["gender"] = "M" if sex_val == "M" else "F"
 
@@ -218,10 +224,10 @@ class HL7Parser:
             logger.warning("Failed to parse PID segment: {}", e)
 
         try:
-            pv1 = msg.segment("PV1")
+            pv1 = getattr(msg, "pv1", None) or next((c for c in msg.children if c.name == "PV1"), None)
 
             # PV1-4: Admission Type
-            if pv1.pv1_4:
+            if pv1 and pv1.pv1_4:
                 adm_type = str(pv1.pv1_4.value).upper()
                 if adm_type in ("E", "EMERGENCY"):
                     patient["admission_type"] = "ED"
@@ -302,8 +308,8 @@ class HL7Parser:
         Returns:
             HL7v2 ACK message string
         """
-        from datetime import datetime
-        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        from datetime import datetime, timezone
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
 
         ack = (
             f"MSH|^~\\&|JEEVANSYNC|JEEVANSYNC|||||ACK^A01|{timestamp}|P|2.5\r"

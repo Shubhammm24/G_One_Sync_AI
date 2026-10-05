@@ -7,13 +7,23 @@ All tests use mock data — no real EMR or FHIR server required.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import socket
 import tempfile
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
 
+from config.settings import emr_settings
+from src.ingestion.emr.audit_logger import AuditLogger
+from src.ingestion.emr.fhir_client import FHIRAuthError, FHIRClient, FHIRRequestError
+from src.ingestion.emr.fhir_mapper import FHIRMapper, FHIRMapperError
 from src.ingestion.emr.fhir_schemas import (
+    LOINC_TO_LAB,
+    LOINC_TO_VITAL,
     FHIRBundle,
     FHIRCodeableConcept,
     FHIRCoding,
@@ -22,19 +32,20 @@ from src.ingestion.emr.fhir_schemas import (
     FHIRQuantity,
     FHIRReference,
     FHIRSubscriptionNotification,
-    LOINC_TO_LAB,
-    LOINC_TO_VITAL,
     ObservationStatus,
     PatientGender,
 )
-from src.ingestion.emr.fhir_mapper import FHIRMapper, FHIRMapperError
+from src.ingestion.emr.fhir_subscription import fhir_router
+from src.ingestion.emr.hl7_listener import MLLPServer
 from src.ingestion.emr.hl7_mapper import HL7Mapper
-from src.ingestion.emr.hl7_parser import HL7Parser, MLLP_START_BYTE, MLLP_END_BYTES
-from src.ingestion.emr.audit_logger import AuditLogger
+from src.ingestion.emr.hl7_parser import MLLP_END_BYTES, MLLP_START_BYTE, HL7ParseError, HL7Parser
+from src.ingestion.ingest_api import app as ingest_app
+from src.ingestion.schemas import Gender
 
 # ── Fixtures directory ───────────────────────────────────────────────
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "fhir_bundles"
+HL7_FIXTURES_DIR = Path(__file__).parent / "fixtures" / "hl7_messages"
 
 
 # ── Helper: Build FHIR Observations ─────────────────────────────────
@@ -608,3 +619,214 @@ class TestAuditLogger:
             audit = AuditLogger(Path(tmpdir))
             events = audit.get_events(date_str="2020-01-01")
             assert events == []
+
+
+# ── HL7 Fixture Tests ────────────────────────────────────────────────
+
+
+class TestHL7Fixtures:
+    """Tests using sample HL7 message fixtures."""
+
+    def test_oru_r01_vitals_fixture(self):
+        """Parse oru_r01_vitals.hl7 and map to vital signs."""
+        fixture_path = HL7_FIXTURES_DIR / "oru_r01_vitals.hl7"
+        raw_msg = fixture_path.read_text(encoding="utf-8")
+        parsed = HL7Parser.parse_message(raw_msg)
+
+        assert parsed["message_type"] == "ORU^R01"
+        assert len(parsed["observations"]) == 6
+
+        vitals = HL7Mapper.obx_segments_to_vitals(parsed["observations"])
+        assert vitals is not None
+        assert vitals.heart_rate == 88.0
+        assert vitals.respiratory_rate == 18.0
+        assert vitals.spo2_pct == 96.0
+        assert vitals.temperature_c == 37.2
+        assert vitals.systolic_bp == 125.0
+        assert vitals.diastolic_bp == 78.0
+
+    def test_oru_r01_labs_fixture(self):
+        """Parse oru_r01_labs.hl7 and map to lab results."""
+        fixture_path = HL7_FIXTURES_DIR / "oru_r01_labs.hl7"
+        raw_msg = fixture_path.read_text(encoding="utf-8")
+        parsed = HL7Parser.parse_message(raw_msg)
+
+        assert parsed["message_type"] == "ORU^R01"
+        assert len(parsed["observations"]) == 5
+
+        labs = HL7Mapper.obx_segments_to_labs(parsed["observations"])
+        assert labs is not None
+        assert labs.wbc_count == 9.5
+        assert labs.lactate == 1.8
+        assert labs.creatinine == 1.1
+        assert labs.crp_level == 25.0
+        assert labs.hemoglobin == 13.2
+
+    def test_adt_a01_admission_fixture(self):
+        """Parse adt_a01_admission.hl7 and map to patient demographics."""
+        fixture_path = HL7_FIXTURES_DIR / "adt_a01_admission.hl7"
+        raw_msg = fixture_path.read_text(encoding="utf-8")
+        parsed = HL7Parser.parse_message(raw_msg)
+
+        assert parsed["message_type"] == "ADT^A01"
+        assert parsed["patient"]["patient_id"] == "12345"
+        assert parsed["patient"]["gender"] == "F"
+
+        demo = HL7Mapper.pid_segment_to_demographics(parsed["patient"])
+        assert demo is not None
+        assert demo.gender == Gender.FEMALE
+
+
+# ── FHIR Client Tests ────────────────────────────────────────────────
+
+
+class TestFHIRClient:
+    """Tests for FHIRClient with mocked HTTP requests."""
+
+    @pytest.mark.asyncio
+    async def test_get_observation_success(self):
+        """Fetch Observation successfully."""
+        client = FHIRClient(base_url="https://mock.fhir.org/R4")
+        mock_data = {
+            "resourceType": "Observation",
+            "id": "obs-123",
+            "status": "final",
+            "category": [{"coding": [{"code": "vital-signs"}]}],
+            "code": {"coding": [{"code": "8867-4", "system": "http://loinc.org"}]},
+            "valueQuantity": {"value": 72.0},
+        }
+
+        with patch.object(client, "_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = mock_data
+
+            obs = await client.get_observation("obs-123")
+            assert obs.id == "obs-123"
+            assert obs.is_vital_sign()
+            assert obs.valueQuantity.value == 72.0
+
+        await client.close()
+
+    @pytest.mark.asyncio
+    async def test_get_observation_http_error(self):
+        """FHIR server returns error raises FHIRRequestError."""
+        client = FHIRClient(base_url="https://mock.fhir.org/R4")
+
+        with patch.object(client, "_request", new_callable=AsyncMock) as mock_req:
+            mock_req.side_effect = FHIRRequestError("404 Not Found")
+
+            with pytest.raises(FHIRRequestError):
+                await client.get_observation("not-found")
+
+        await client.close()
+
+
+# ── FHIR Webhook & Router Endpoint Tests ─────────────────────────────
+
+
+class TestFHIRWebhookEndpoint:
+    """Tests for the FHIR router mounted onto FastAPI."""
+
+    @pytest.fixture(autouse=True)
+    def setup_router(self):
+        """Ensure FHIR router is mounted for tests."""
+        routes = [r.path for r in ingest_app.routes]
+        if "/emr/fhir/health" not in routes:
+            ingest_app.include_router(fhir_router, prefix="/emr/fhir", tags=["EMR-FHIR"])
+
+    def test_fhir_health_check(self):
+        """Test GET /emr/fhir/health endpoint."""
+        client = TestClient(ingest_app)
+        resp = client.get("/emr/fhir/health")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "status" in data
+        assert data["status"] in ("healthy", "degraded")
+        assert "fhir_base_url" in data
+
+    def test_webhook_ingests_vital_signs(self):
+        """Test POST /emr/fhir/webhook ingests vital signs observation."""
+        obs_hr = _make_vital_observation("8867-4", 82.0, "Heart rate")
+        obs_rr = _make_vital_observation("9279-1", 16.0, "Resp rate")
+        obs_spo2 = _make_vital_observation("2708-6", 98.0, "SpO2")
+        obs_temp = _make_vital_observation("8310-5", 37.0, "Temp")
+        obs_sbp = _make_vital_observation("8480-6", 120.0, "Systolic BP")
+        obs_dbp = _make_vital_observation("8462-4", 80.0, "Diastolic BP")
+
+        client = TestClient(ingest_app)
+        mock_client = AsyncMock()
+        mock_client.get_observation.return_value = obs_hr
+        mock_client.get_vitals.return_value = [obs_rr, obs_spo2, obs_temp, obs_sbp, obs_dbp]
+
+        with patch("src.ingestion.emr.fhir_subscription._fhir_client", mock_client):
+            payload = {
+                "subscriptionId": "sub-001",
+                "resourceType": "Observation",
+                "resourceId": "obs-hr-001",
+                "patientReference": "Patient/1001",
+                "eventType": "create",
+            }
+            resp = client.post("/emr/fhir/webhook", json=payload)
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["status"] == "accepted"
+            assert data["records_received"] == 1
+            assert data["records_valid"] == 1
+
+    def test_webhook_missing_required_fields(self):
+        """Test POST /emr/fhir/webhook handles unexpected payload."""
+        client = TestClient(ingest_app)
+        resp = client.post("/emr/fhir/webhook", json={"random": "data"})
+        assert resp.status_code in (200, 422, 502)
+
+
+# ── HL7v2 MLLP Server Tests ──────────────────────────────────────────
+
+
+class TestMLLPServer:
+    """Tests for MLLP TCP Server message processing and sockets."""
+
+    @pytest.mark.asyncio
+    async def test_process_oru_r01_message(self):
+        """Process valid ORU^R01 message and receive valid ACK."""
+        server = MLLPServer(host="127.0.0.1", port=2575)
+        raw_msg = (
+            "MSH|^~\\&|MONITOR|ICU|||20261006120000||ORU^R01|MSG999|P|2.5\r"
+            "PID|||12345^^^HOSP||DOE^JOHN||19700515|M\r"
+            "OBX|1|NM|8867-4^Heart Rate^LN||84|/min|||||F\r"
+            "OBX|2|NM|9279-1^Respiratory Rate^LN||16|/min|||||F\r"
+            "OBX|3|NM|2708-6^SpO2^LN||98|%|||||F\r"
+            "OBX|4|NM|8310-5^Temperature^LN||37.0|Cel|||||F\r"
+            "OBX|5|NM|8480-6^Systolic BP^LN||120|mmHg|||||F\r"
+            "OBX|6|NM|8462-4^Diastolic BP^LN||80|mmHg|||||F\r"
+        )
+        mllp_bytes = MLLP_START_BYTE + raw_msg.encode("utf-8") + MLLP_END_BYTES
+        ack_bytes = await server.process_message(mllp_bytes)
+
+        assert MLLP_START_BYTE in ack_bytes
+        assert MLLP_END_BYTES in ack_bytes
+        ack_str = HL7Parser.strip_mllp_framing(ack_bytes)
+        assert "MSA|AA|MSG999" in ack_str
+
+    @pytest.mark.asyncio
+    async def test_process_adt_a01_message(self):
+        """Process valid ADT^A01 admission message."""
+        server = MLLPServer(host="127.0.0.1", port=2575)
+        raw_msg = (
+            "MSH|^~\\&|ADT|HOSP|||20261006120000||ADT^A01|MSG888|P|2.5\r"
+            "PID|||12345^^^HOSP||DOE^JOHN||19700515|M\r"
+        )
+        mllp_bytes = MLLP_START_BYTE + raw_msg.encode("utf-8") + MLLP_END_BYTES
+        ack_bytes = await server.process_message(mllp_bytes)
+
+        ack_str = HL7Parser.strip_mllp_framing(ack_bytes)
+        assert "MSA|AA|MSG888" in ack_str
+
+    @pytest.mark.asyncio
+    async def test_process_malformed_message_nak(self):
+        """Process malformed HL7 message returns AE/AR NAK."""
+        server = MLLPServer(host="127.0.0.1", port=2575)
+        mllp_bytes = MLLP_START_BYTE + b"INVALID_HL7_DATA" + MLLP_END_BYTES
+        ack_bytes = await server.process_message(mllp_bytes)
+
+        ack_str = HL7Parser.strip_mllp_framing(ack_bytes)
+        assert "MSA|AE|" in ack_str or "MSA|AR|" in ack_str

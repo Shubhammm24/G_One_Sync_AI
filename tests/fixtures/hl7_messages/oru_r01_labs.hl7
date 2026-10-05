@@ -1,0 +1,7 @@
+MSH|^~\&|LAB|ICU|||20261006120500||ORU^R01|MSG002|P|2.5
+PID|||12345^^^HOSP||DOE^JOHN||19700515|M
+OBX|1|NM|6690-2^WBC^LN||9.5|10*3/uL|||||F
+OBX|2|NM|2524-7^Lactate^LN||1.8|mmol/L|||||F
+OBX|3|NM|2160-0^Creatinine^LN||1.1|mg/dL|||||F
+OBX|4|NM|1988-5^CRP^LN||25.0|mg/L|||||F
+OBX|5|NM|718-7^Hemoglobin^LN||13.2|g/dL|||||F

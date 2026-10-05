@@ -17,10 +17,12 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from loguru import logger
 
 from config.settings import emr_settings, kafka_settings
+from src.ingestion.data_lake_router import DataLakeRouter
 from src.ingestion.emr.audit_logger import AuditLogger
 from src.ingestion.emr.fhir_client import FHIRClient, FHIRRequestError
 from src.ingestion.emr.fhir_mapper import FHIRMapper, FHIRMapperError
 from src.ingestion.emr.fhir_schemas import FHIRSubscriptionNotification
+from src.ingestion.kafka_producer import get_producer
 from src.ingestion.schemas import IngestionResponse
 
 # ── Router ───────────────────────────────────────────────────────────
@@ -46,6 +48,16 @@ def _get_audit_logger() -> AuditLogger:
     if _audit_logger is None:
         _audit_logger = AuditLogger(emr_settings.audit_log_dir)
     return _audit_logger
+
+
+def _get_producer(request: Request):
+    """Get Kafka producer from app state or fallback to singleton."""
+    return getattr(request.app.state, "producer", None) or get_producer()
+
+
+def _get_data_lake(request: Request):
+    """Get DataLake router from app state or fallback to singleton."""
+    return getattr(request.app.state, "data_lake", None) or DataLakeRouter()
 
 
 # ── Webhook Endpoint ────────────────────────────────────────────────
@@ -97,10 +109,20 @@ async def fhir_webhook(
         except ValueError:
             patient_id_int = abs(hash(patient_id_str)) % 1_000_000
 
+        producer = _get_producer(request)
+        data_lake = _get_data_lake(request)
+
         # Map based on category
         records_valid = 0
         if observation.is_vital_sign():
-            vitals = FHIRMapper.observations_to_vitals([observation])
+            try:
+                vitals = FHIRMapper.observations_to_vitals([observation])
+            except FHIRMapperError:
+                # Webhook sent a single vital observation — fetch recent observations to complete set
+                recent_vitals = await client.get_vitals(patient_id_str, count=10)
+                all_vitals = [observation] + [o for o in recent_vitals if o.id != observation.id]
+                vitals = FHIRMapper.observations_to_vitals(all_vitals)
+
             record = {
                 "patient_id": patient_id_int,
                 "ingestion_id": ingestion_id,
@@ -108,8 +130,8 @@ async def fhir_webhook(
                 "fhir_resource_id": resource_id,
                 **vitals.model_dump(),
             }
-            request.app.state.producer.produce_vitals(patient_id_int, record)
-            request.app.state.data_lake.store(
+            producer.produce_vitals(patient_id_int, record)
+            data_lake.store(
                 data=record,
                 patient_id=str(patient_id_int),
                 data_type=kafka_settings.vitals_topic,
@@ -117,7 +139,14 @@ async def fhir_webhook(
             records_valid = 1
 
         elif observation.is_laboratory():
-            labs = FHIRMapper.observations_to_labs([observation])
+            try:
+                labs = FHIRMapper.observations_to_labs([observation])
+            except FHIRMapperError:
+                # Webhook sent a single lab observation — fetch recent observations to complete set
+                recent_labs = await client.get_labs(patient_id_str, count=10)
+                all_labs = [observation] + [o for o in recent_labs if o.id != observation.id]
+                labs = FHIRMapper.observations_to_labs(all_labs)
+
             record = {
                 "patient_id": patient_id_int,
                 "ingestion_id": ingestion_id,
@@ -125,8 +154,8 @@ async def fhir_webhook(
                 "fhir_resource_id": resource_id,
                 **labs.model_dump(),
             }
-            request.app.state.producer.produce_labs(patient_id_int, record)
-            request.app.state.data_lake.store(
+            producer.produce_labs(patient_id_int, record)
+            data_lake.store(
                 data=record,
                 patient_id=str(patient_id_int),
                 data_type=kafka_settings.labs_topic,
@@ -225,6 +254,9 @@ async def fhir_poll(
         records_valid = 0
         records_rejected = 0
 
+        producer = _get_producer(request)
+        data_lake = _get_data_lake(request)
+
         # Process vitals
         if vitals_obs:
             try:
@@ -235,8 +267,8 @@ async def fhir_poll(
                     "source": emr_settings.emr_source_tag,
                     **vitals.model_dump(),
                 }
-                request.app.state.producer.produce_vitals(patient_id_int, record)
-                request.app.state.data_lake.store(
+                producer.produce_vitals(patient_id_int, record)
+                data_lake.store(
                     data=record,
                     patient_id=str(patient_id_int),
                     data_type=kafka_settings.vitals_topic,
@@ -256,8 +288,8 @@ async def fhir_poll(
                     "source": emr_settings.emr_source_tag,
                     **labs.model_dump(),
                 }
-                request.app.state.producer.produce_labs(patient_id_int, record)
-                request.app.state.data_lake.store(
+                producer.produce_labs(patient_id_int, record)
+                data_lake.store(
                     data=record,
                     patient_id=str(patient_id_int),
                     data_type=kafka_settings.labs_topic,
@@ -316,6 +348,7 @@ async def fhir_health() -> dict:
     connectivity = await client.check_connectivity()
 
     return {
+        "status": "healthy" if connectivity else "degraded",
         "emr_enabled": emr_settings.emr_enabled,
         "fhir_base_url": emr_settings.fhir_base_url,
         "fhir_subscription_enabled": emr_settings.fhir_subscription_enabled,

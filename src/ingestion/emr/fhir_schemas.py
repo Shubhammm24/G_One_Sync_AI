@@ -7,7 +7,7 @@ Includes LOINC code → field name mapping for clinical observations.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -193,7 +193,7 @@ class FHIRPatient(BaseModel):
         """Compute age in years from birthDate."""
         if not self.birthDate:
             return None
-        ref = reference_date or datetime.utcnow()
+        ref = reference_date or datetime.now(timezone.utc)
         try:
             birth = datetime.strptime(self.birthDate, "%Y-%m-%d")
             age = ref.year - birth.year

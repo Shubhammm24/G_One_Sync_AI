@@ -1,0 +1,8 @@
+MSH|^~\&|MONITOR|ICU|||20261006120000||ORU^R01|MSG001|P|2.5
+PID|||12345^^^HOSP||DOE^JOHN||19700515|M
+OBX|1|NM|8867-4^Heart Rate^LN||88|/min|||||F
+OBX|2|NM|9279-1^Respiratory Rate^LN||18|/min|||||F
+OBX|3|NM|2708-6^SpO2^LN||96|%|||||F
+OBX|4|NM|8310-5^Temperature^LN||37.2|Cel|||||F
+OBX|5|NM|8480-6^Systolic BP^LN||125|mmHg|||||F
+OBX|6|NM|8462-4^Diastolic BP^LN||78|mmHg|||||F

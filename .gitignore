@@ -29,6 +29,8 @@ data/raw/
 data/processed/
 data/features/
 data/datalake/
+data/audit/
+data/local_queue/
 models/artifacts/
 mlruns/
 mlflow.db

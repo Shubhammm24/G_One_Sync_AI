@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -53,7 +53,7 @@ class AuditLogger:
             status: Event status ('success', 'error', 'skipped')
             metadata: Additional context (resource IDs, error messages, etc.)
         """
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         entry = {
             "timestamp": now.isoformat() + "Z",
@@ -95,7 +95,7 @@ class AuditLogger:
             List of audit event dicts
         """
         if date_str is None:
-            date_str = datetime.utcnow().strftime("%Y-%m-%d")
+            date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         filepath = self.audit_dir / f"{date_str}.jsonl"
         if not filepath.exists():
