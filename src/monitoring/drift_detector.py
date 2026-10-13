@@ -315,3 +315,47 @@ class DriftDetector:
         with open(path, "w") as f:
             json.dump(report, f, indent=2, default=str)
         logger.info("Drift report saved → {}", path)
+
+    # ── Continuous Learning Hook (Phase 7) ────────────────────────
+
+    def should_retrain(self) -> bool:
+        """Check if drift is severe enough to trigger model retraining.
+
+        Uses the existing generate_drift_report() output — returns True
+        when the report status is RETRAIN_RECOMMENDED (i.e., >30% of
+        features show significant PSI drift).
+
+        Returns:
+            True if retraining is recommended based on current drift levels.
+        """
+        report = self.generate_drift_report()
+        status = report.get("status", "")
+
+        if status == "RETRAIN_RECOMMENDED":
+            logger.warning(
+                "Drift detector recommends retraining: {}/{} features drifted, "
+                "mean PSI={:.4f}",
+                report.get("drifted_features_count", 0),
+                len(report.get("feature_details", [])),
+                report.get("overall_mean_psi", 0.0),
+            )
+            return True
+
+        return False
+
+    def get_drift_severity(self) -> dict:
+        """Get a summary of current drift severity for monitoring.
+
+        Returns:
+            Dict with status, counts, and actionability.
+        """
+        report = self.generate_drift_report()
+        return {
+            "status": report.get("status", "unknown"),
+            "drifted_features_count": report.get("drifted_features_count", 0),
+            "overall_mean_psi": report.get("overall_mean_psi", 0.0),
+            "prediction_drift": report.get("prediction_drift", {}),
+            "retrain_recommended": report.get("status") == "RETRAIN_RECOMMENDED",
+            "samples_analyzed": report.get("samples_analyzed", 0),
+        }
+

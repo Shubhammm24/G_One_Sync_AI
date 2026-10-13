@@ -236,6 +236,49 @@ class FederatedSettings(BaseSettings):
     model_config = ConfigDict(env_prefix="JEEVAN_FL_")
 
 
+class ContinuousSettings(BaseSettings):
+    """Continuous learning configuration (Phase 7).
+
+    Controls drift-triggered retraining, champion/challenger model
+    promotion, and model versioning. When continuous_enabled is False
+    (default), the entire continuous learning subsystem is inert.
+
+    IMPORTANT: auto_promote defaults to False. In a clinical system,
+    model promotion should require human approval by default. Set to
+    True only after FDA clearance for adaptive AI (Phase 9).
+    """
+
+    # Master toggle — off by default
+    continuous_enabled: bool = False
+
+    # Drift check schedule
+    drift_check_interval_s: int = 3600  # Check drift hourly
+
+    # Retraining buffer
+    retraining_buffer_dir: Path = PROJECT_ROOT / "data" / "retraining_buffer"
+    min_retrain_samples: int = 5000
+    max_buffer_size_mb: int = 500
+
+    # Champion/Challenger evaluation
+    shadow_evaluation_hours: int = 24
+    champion_auroc_threshold: float = 0.005  # 0.5% AUROC improvement required
+    champion_auprc_threshold: float = 0.0  # AUPRC must be >= champion
+    min_evaluation_samples: int = 1000
+
+    # Model versioning
+    model_versions_dir: Path = PROJECT_ROOT / "models" / "versions"
+    max_model_versions: int = 10
+
+    # Promotion policy
+    auto_promote: bool = False  # Require human approval by default
+
+    # Fine-tuning for online updates
+    finetune_lr_multiplier: float = 0.1  # 10% of base LR for fine-tuning
+    finetune_weight_decay: float = 1e-4  # Prevent catastrophic forgetting
+
+    model_config = ConfigDict(env_prefix="JEEVAN_CL_")
+
+
 # ── Singleton instances ──────────────────────────────────────────────────
 data_settings = DataSettings()
 kafka_settings = KafkaSettings()
@@ -245,3 +288,4 @@ model_settings = ModelSettings()
 serving_settings = ServingSettings()
 emr_settings = EMRSettings()
 federated_settings = FederatedSettings()
+continuous_settings = ContinuousSettings()
