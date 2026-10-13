@@ -304,3 +304,54 @@ class BaseTrainer(abc.ABC):
 
         logger.info("✅ Run finalized for '{}'", self.model_name)
 
+    # ── Federated Learning Support (Phase 6) ─────────────────────
+
+    def get_state_dict(self) -> dict:
+        """Return model state for federated aggregation.
+
+        PyTorch models return their native state_dict().
+        XGBoost models serialize to bytes via save_raw().
+        Subclasses may override for custom serialization.
+        """
+        if not self.is_trained or self.model is None:
+            raise RuntimeError(f"'{self.model_name}' must be trained before FL export")
+
+        if hasattr(self.model, "state_dict"):
+            # PyTorch models (BiLSTM, Transformer)
+            return {k: v.cpu().clone() for k, v in self.model.state_dict().items()}
+        elif hasattr(self.model, "save_raw"):
+            # XGBoost — serialize to bytes
+            return {"__xgboost_raw__": self.model.save_raw()}
+        raise NotImplementedError(
+            f"'{self.model_name}' does not support federated state export"
+        )
+
+    def set_state_dict(self, state_dict: dict) -> None:
+        """Load aggregated state from federated coordinator.
+
+        PyTorch models use load_state_dict().
+        XGBoost models load from raw bytes.
+        Subclasses may override for custom deserialization.
+        """
+        if self.model is None:
+            raise RuntimeError(
+                f"'{self.model_name}' model must be built before FL import"
+            )
+
+        if "__xgboost_raw__" in state_dict:
+            # XGBoost deserialization
+            import xgboost as xgb
+
+            booster = xgb.Booster()
+            booster.load_model(bytearray(state_dict["__xgboost_raw__"]))
+            self.model.get_booster().load_model(bytearray(state_dict["__xgboost_raw__"]))
+            logger.info("FL state imported for '{}' (XGBoost)", self.model_name)
+        elif hasattr(self.model, "load_state_dict"):
+            # PyTorch models
+            self.model.load_state_dict(state_dict)
+            logger.info("FL state imported for '{}' (PyTorch)", self.model_name)
+        else:
+            raise NotImplementedError(
+                f"'{self.model_name}' does not support federated state import"
+            )
+

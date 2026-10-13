@@ -93,6 +93,31 @@ services:
     profiles:
       - emr
 
+  # ── Federated Learning Coordinator (Phase 6) ─────────────
+  fl-coordinator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: g-one-sync-fl-coordinator
+    ports:
+      - "50051:50051"
+    volumes:
+      - ../models:/app/models
+    environment:
+      - JEEVAN_FL_ENABLED=true
+      - JEEVAN_FL_FL_ROLE=coordinator
+      - JEEVAN_FL_COORDINATOR_HOST=0.0.0.0
+      - JEEVAN_FL_COORDINATOR_PORT=50051
+      - JEEVAN_FL_FL_ROUNDS=50
+      - JEEVAN_FL_FL_MIN_PARTICIPANTS=2
+      - JEEVAN_FL_AGGREGATION_STRATEGY=fedavg
+      - JEEVAN_FL_DP_ENABLED=true
+      - JEEVAN_FL_SECURE_AGGREGATION=true
+    command: ["python3", "-m", "src.federated.coordinator"]
+    restart: unless-stopped
+    profiles:
+      - federated
+
 volumes:
   redpanda-data:
   mlflow-data:

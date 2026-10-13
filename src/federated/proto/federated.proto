@@ -1,0 +1,122 @@
+// G_One_Sync AI — Federated Learning gRPC Service
+// ====================================================
+// Defines the RPC interface between FL coordinator and participants.
+// 
+// Compile with:
+//   python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. federated.proto
+
+syntax = "proto3";
+
+package federated;
+
+option java_multiple_files = true;
+
+// ── Messages ────────────────────────────────────────────────────────────
+
+message SiteRegistrationRequest {
+    string site_id = 1;
+    string site_name = 2;
+    int64 dataset_size = 3;
+    repeated string model_types = 4;
+    bool gpu_available = 5;
+}
+
+message SiteRegistrationResponse {
+    bool accepted = 1;
+    string message = 2;
+    int32 total_registered = 3;
+    int32 min_required = 4;
+}
+
+message HeartbeatRequest {
+    string site_id = 1;
+}
+
+message HeartbeatResponse {
+    bool acknowledged = 1;
+    string current_status = 2;
+    int32 current_round = 3;
+}
+
+message GlobalModelRequest {
+    string site_id = 1;
+    string model_type = 2;
+    int32 round_number = 3;
+}
+
+message GlobalModelResponse {
+    int32 round_number = 1;
+    string model_type = 2;
+    bytes state_dict = 3;
+    int32 local_epochs = 4;
+    double learning_rate = 5;
+    int32 batch_size = 6;
+    string aggregation_strategy = 7;
+    double fedprox_mu = 8;
+    bool dp_enabled = 9;
+    double dp_max_grad_norm = 10;
+    double dp_noise_multiplier = 11;
+    int32 total_rounds = 12;
+}
+
+message ModelUpdateRequest {
+    string site_id = 1;
+    int32 round_number = 2;
+    string model_type = 3;
+    bytes state_dict = 4;
+    int64 dataset_size = 5;
+    double training_time_s = 6;
+    map<string, double> local_metrics = 7;
+    double dp_epsilon_spent = 8;
+}
+
+message ModelUpdateResponse {
+    bool accepted = 1;
+    string message = 2;
+    int32 updates_received = 3;
+    int32 updates_expected = 4;
+}
+
+message RoundStatusRequest {
+    string site_id = 1;
+    int32 round_number = 2;
+}
+
+message RoundStatusResponse {
+    int32 round_number = 1;
+    string status = 2;  // "waiting", "training", "aggregating", "completed"
+    int32 updates_received = 3;
+    int32 updates_expected = 4;
+    double dp_epsilon_total = 5;
+    double dp_epsilon_budget = 6;
+    bool training_complete = 7;
+}
+
+message SessionStatusRequest {}
+
+message SessionStatusResponse {
+    bool is_active = 1;
+    int32 current_round = 2;
+    int32 total_rounds = 3;
+    int32 registered_sites = 4;
+    double dp_epsilon_spent = 5;
+    double dp_epsilon_budget = 6;
+    bool training_complete = 7;
+}
+
+// ── Service Definition ──────────────────────────────────────────────────
+
+service FederatedLearningService {
+    // Site management
+    rpc Register(SiteRegistrationRequest) returns (SiteRegistrationResponse);
+    rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+    rpc Unregister(SiteRegistrationRequest) returns (SiteRegistrationResponse);
+    
+    // Model exchange
+    rpc GetGlobalModel(GlobalModelRequest) returns (GlobalModelResponse);
+    rpc SubmitUpdate(ModelUpdateRequest) returns (ModelUpdateResponse);
+    
+    // Status
+    rpc GetRoundStatus(RoundStatusRequest) returns (RoundStatusResponse);
+    rpc GetSessionStatus(SessionStatusRequest) returns (SessionStatusResponse);
+}

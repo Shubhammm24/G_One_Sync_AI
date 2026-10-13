@@ -186,6 +186,56 @@ class EMRSettings(BaseSettings):
     model_config = ConfigDict(env_prefix="JEEVAN_EMR_")
 
 
+class FederatedSettings(BaseSettings):
+    """Federated learning configuration (Phase 6).
+
+    Controls multi-site federated training with differential privacy.
+    When fl_role == "standalone" (default), the entire FL subsystem is
+    inert and the existing training pipeline runs exactly as before.
+    """
+
+    # Master toggle — off by default
+    fl_enabled: bool = False
+    fl_role: str = "standalone"  # "coordinator", "participant", "standalone"
+
+    # Coordinator settings
+    coordinator_host: str = "0.0.0.0"
+    coordinator_port: int = 50051
+    coordinator_url: str = "localhost:50051"
+
+    # Site identification
+    site_id: str = "site-001"
+    site_name: str = "Default Hospital"
+
+    # Training rounds
+    fl_rounds: int = 50
+    fl_min_participants: int = 2
+    fl_epochs_per_round: int = 3
+    fl_learning_rate: float = 1e-3
+
+    # Aggregation strategy
+    aggregation_strategy: str = "fedavg"  # "fedavg", "fedprox", "fedbn"
+    fedprox_mu: float = 0.01  # Proximal term weight for FedProx
+
+    # Differential privacy
+    dp_enabled: bool = True
+    dp_epsilon: float = 8.0
+    dp_delta: float = 1e-5
+    dp_max_grad_norm: float = 1.0
+    dp_noise_multiplier: float = 1.1
+
+    # Secure aggregation
+    secure_aggregation: bool = True
+
+    # Model versioning
+    fl_artifacts_dir: Path = PROJECT_ROOT / "models" / "artifacts" / "federated"
+
+    # gRPC settings
+    grpc_max_message_size: int = 100 * 1024 * 1024  # 100 MB for model weights
+
+    model_config = ConfigDict(env_prefix="JEEVAN_FL_")
+
+
 # ── Singleton instances ──────────────────────────────────────────────────
 data_settings = DataSettings()
 kafka_settings = KafkaSettings()
@@ -194,3 +244,4 @@ api_settings = APISettings()
 model_settings = ModelSettings()
 serving_settings = ServingSettings()
 emr_settings = EMRSettings()
+federated_settings = FederatedSettings()
