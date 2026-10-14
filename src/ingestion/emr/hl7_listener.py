@@ -158,11 +158,14 @@ class MLLPServer:
 
             if message_type == "ORU^R01":
                 records_ingested = self._process_oru(parsed, ingestion_id)
+                ack = HL7Parser.build_ack(control_id, "AA", "Message accepted")
             elif message_type in ("ADT^A01", "ADT^A03"):
                 self._process_adt(parsed, ingestion_id)
                 records_ingested = 1
+                ack = HL7Parser.build_ack(control_id, "AA", "Message accepted")
             else:
                 logger.warning("Unsupported HL7 message type: {}", message_type)
+                ack = HL7Parser.build_ack(control_id, "AE", f"Unsupported or unknown message type: {message_type}")
 
             elapsed_ms = (time.time() - start) * 1000
             self._messages_processed += 1
@@ -181,8 +184,7 @@ class MLLPServer:
                 },
             )
 
-            # Return ACK
-            ack = HL7Parser.build_ack(control_id, "AA", "Message accepted")
+            # Return ACK/NAK
             return MLLP_START_BYTE + ack.encode("utf-8") + MLLP_END_BYTES
 
         except HL7ParseError as e:

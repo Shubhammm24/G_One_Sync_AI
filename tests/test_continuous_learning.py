@@ -32,7 +32,6 @@ from src.continuous.data_accumulator import DataAccumulator
 from src.continuous.model_versioner import ModelVersion, ModelVersionManager
 from src.continuous.shadow_evaluator import ShadowEvaluator, ShadowPrediction
 
-
 # ── Fixtures ─────────────────────────────────────────────────────────────
 
 
@@ -211,7 +210,7 @@ class TestModelVersionManager:
         v1 = versioner.create_version(
             model_type="xgboost", artifacts_source=artifacts, metrics={},
         )
-        v2 = versioner.create_version(
+        versioner.create_version(
             model_type="xgboost", artifacts_source=artifacts, metrics={},
         )
 
@@ -584,7 +583,7 @@ class TestDriftDetectorExtensions:
         """should_retrain should return False when stable."""
         from src.monitoring.drift_detector import DriftDetector
 
-        detector = DriftDetector(feature_columns=["hr", "rr"])
+        detector = DriftDetector(feature_names=["hr", "rr"])
 
         # Add matching reference and live data (no drift)
         ref = np.random.randn(100, 2)
@@ -598,7 +597,7 @@ class TestDriftDetectorExtensions:
         """get_drift_severity should return well-formed dict."""
         from src.monitoring.drift_detector import DriftDetector
 
-        detector = DriftDetector(feature_columns=["hr"])
+        detector = DriftDetector(feature_names=["hr"])
         ref = np.random.randn(100, 1)
         detector.set_reference(ref)
         for row in ref:

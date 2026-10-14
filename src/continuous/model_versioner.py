@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import shutil
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -141,7 +141,8 @@ class ModelVersionManager:
         Returns:
             The created ModelVersion.
         """
-        version_id = f"{model_type}-{int(time.time())}"
+        # Use high-resolution timestamp to avoid collisions in rapid calls
+        version_id = f"{model_type}-{int(time.time() * 1_000_000)}"
 
         # Create version directory and copy artifacts
         version_dir = self.versions_dir / version_id

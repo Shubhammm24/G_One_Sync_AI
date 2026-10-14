@@ -53,7 +53,8 @@ class ShadowEvaluator:
         max_records: int = 100_000,
     ):
         self.evaluation_hours = (
-            evaluation_hours or continuous_settings.shadow_evaluation_hours
+            evaluation_hours if evaluation_hours is not None
+            else continuous_settings.shadow_evaluation_hours
         )
         self.max_records = max_records
 
@@ -173,8 +174,8 @@ class ShadowEvaluator:
 
         # Avoid import-time dependency on sklearn
         from sklearn.metrics import (
-            roc_auc_score,
             average_precision_score,
+            roc_auc_score,
         )
 
         champion_metrics = {}
