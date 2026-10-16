@@ -18,6 +18,8 @@ env/
 .idea/
 *.swp
 *.swo
+.expo/
+node_modules/
 
 # ---- Environment ----
 .env

@@ -25,19 +25,21 @@
 ### Quickstart
 
 ```bash
-# 1. Install dependencies
+# 1. Navigate to mobile directory
 cd mobile
-npm install
 
-# 2. Start Expo development server
-npm start
+# 2. Run with Tunnel (Recommended for Physical Devices on any Wi-Fi/Hotspot)
+# This bypasses Windows Firewall and router client isolation
+npm run start:tunnel
 
-# 3. Run on Android emulator or physical device via Expo Go
-npm run android
+# OR: Run on Local Wi-Fi (if phone is on the exact same Wi-Fi)
+npm run start:lan
 
-# 4. Run on iOS Simulator (macOS only)
-npm run ios
+# OR: Run instantly in your Web Browser (no phone needed)
+npm run web
 ```
+
+Scan the QR code in **Expo Go** (available on Google Play Store & Apple App Store).
 
 ---
 

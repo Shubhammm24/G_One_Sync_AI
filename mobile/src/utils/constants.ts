@@ -1,10 +1,13 @@
-/**
- * G_One_Sync AI — Mobile Constants & Clinical Thresholds
- * ========================================================
- */
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-export const API_BASE_URL = 'http://10.0.2.2:8001'; // Default for Android emulator to localhost; can be customized
-export const WS_BASE_URL = 'ws://10.0.2.2:8000/ws/live';
+// Dynamically extract host IP from Expo packager (works automatically for physical phones on Wi-Fi)
+const bundlerHost = Constants.expoConfig?.hostUri?.split(':')[0];
+const DEFAULT_HOST = bundlerHost || (Platform.OS === 'android' ? '10.0.2.2' : '192.168.29.138');
+
+export const API_BASE_URL = `http://${DEFAULT_HOST}:8001`;
+export const WS_BASE_URL = `ws://${DEFAULT_HOST}:8002/ws/live`;
+
 
 export const RISK_COLORS = {
   CRITICAL: '#EF4444', // Red-500
