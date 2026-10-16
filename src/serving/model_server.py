@@ -213,6 +213,48 @@ class ModelRegistry:
         self._loaded = True
         logger.info("Model Registry: {} models loaded", len(self.models))
 
+    def _adapt_xgboost_features(self, features: np.ndarray) -> np.ndarray:
+        """Expand 15-dim raw payload to 215 engineered features expected by XGBoost."""
+        feat_names = self.feature_names.get("xgboost", [])
+        if not feat_names or features.shape[1] == len(feat_names):
+            return features
+
+        batch_out = []
+        for i in range(features.shape[0]):
+            row = features[i]
+            val_map = {
+                "heart_rate": row[0], "respiratory_rate": row[1], "spo2_pct": row[2],
+                "temperature_c": row[3], "systolic_bp": row[4], "diastolic_bp": row[5],
+                "oxygen_flow": row[6], "mobility_score": row[7], "nurse_alert": row[8],
+                "wbc_count": row[9], "lactate": row[10], "creatinine": row[11],
+                "crp_level": row[12], "hemoglobin": row[13], "sepsis_risk_score": row[14],
+            }
+            vec = []
+            for name in feat_names:
+                if any(name.endswith(s) for s in ["_mean", "_median", "_min", "_max", "_latest"]):
+                    base = name.rsplit("_", 1)[0]
+                    vec.append(val_map.get(base, 0.0))
+                elif any(name.endswith(s) for s in ["_std", "_iqr", "_range", "_slope", "_delta", "_roc", "_accel", "_sdnn", "_rmssd", "_cv"]):
+                    vec.append(0.0)
+                elif name.startswith("map_"):
+                    vec.append((val_map["systolic_bp"] + 2 * val_map["diastolic_bp"]) / 3.0)
+                elif name.startswith("shock_index"):
+                    vec.append(val_map["heart_rate"] / max(val_map["systolic_bp"], 1.0))
+                elif name.startswith("qsofa"):
+                    vec.append(float((val_map["respiratory_rate"] >= 22) + (val_map["systolic_bp"] <= 100)))
+                elif name == "lactate_elevated":
+                    vec.append(float(val_map["lactate"] > 2.0))
+                elif name == "age":
+                    vec.append(65.0)
+                elif name == "comorbidity_index":
+                    vec.append(2.0)
+                elif name in ("gender_M", "admission_type_ED"):
+                    vec.append(1.0)
+                else:
+                    vec.append(0.0)
+            batch_out.append(vec)
+        return np.array(batch_out, dtype=np.float32)
+
     def predict(
         self,
         features: np.ndarray,
@@ -225,12 +267,16 @@ class ModelRegistry:
         model = self.models[model_type]
 
         if model_type == "xgboost":
+            if features.ndim == 2 and features.shape[1] == 15 and "xgboost" in self.feature_names:
+                features = self._adapt_xgboost_features(features)
             return model.predict_proba(features)[:, 1]
 
         elif model_type in ("bilstm", "transformer"):
             import torch
             with torch.no_grad():
                 tensor = torch.tensor(features, dtype=torch.float32)
+                if tensor.ndim == 2:
+                    tensor = tensor[:, :11].unsqueeze(1).repeat(1, 24, 1)
                 if torch.cuda.is_available():
                     tensor = tensor.to("cuda")
                 if model_type == "bilstm":
