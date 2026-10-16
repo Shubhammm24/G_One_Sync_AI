@@ -56,6 +56,10 @@ grpcio>=1.64
 grpcio-tools>=1.64
 opacus>=1.5
 
+# ── Mobile & Auth (Phase 8) ──────────────────────────────────────────
+PyJWT>=2.8
+bcrypt>=4.1
+
 # ── Testing ──────────────────────────────────────────────
 pytest>=8.2
 pytest-asyncio>=0.23

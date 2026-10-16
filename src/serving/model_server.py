@@ -5,11 +5,18 @@ Production FastAPI server for real-time clinical deterioration predictions.
 Serves XGBoost, BiLSTM, and Transformer models with ensemble capability.
 
 Endpoints:
-    POST /predict          — Single patient prediction
-    POST /predict/batch    — Batch predictions
-    POST /predict/explain  — Prediction + SHAP explanation
-    GET  /health           — Health check
-    GET  /model/info       — Model metadata
+    POST /predict                     — Single patient prediction
+    POST /predict/batch               — Batch predictions
+    POST /predict/explain             — Prediction + SHAP explanation
+    GET  /health                      — Health check
+    GET  /model/info                  — Model metadata
+    POST /auth/login                  — Physician JWT authentication
+    POST /auth/refresh                — Refresh JWT token
+    GET  /mobile/watchlist            — Physician's patient watchlist
+    GET  /mobile/patient/{id}         — Single patient risk summary
+    POST /notifications/register      — Register FCM device token
+    POST /notifications/test          — Send test push notification
+    DELETE /notifications/{token}     — Unregister device
 """
 
 from __future__ import annotations
@@ -24,8 +31,7 @@ from fastapi import FastAPI, HTTPException
 from loguru import logger
 from pydantic import BaseModel, Field
 
-from config.settings import serving_settings, model_settings
-
+from config.settings import model_settings, serving_settings
 
 # ── Request/Response Models ──────────────────────────────────────────────
 
@@ -159,6 +165,7 @@ class ModelRegistry:
         if lstm_path.exists():
             try:
                 import torch
+
                 from src.modeling.lstm_trainer import BiLSTMAttentionModel
                 checkpoint = torch.load(lstm_path, map_location="cpu", weights_only=False)
                 hp = checkpoint["hyperparams"]
@@ -182,6 +189,7 @@ class ModelRegistry:
         if tf_path.exists():
             try:
                 import torch
+
                 from src.modeling.transformer_trainer import TemporalTransformerModel
                 checkpoint = torch.load(tf_path, map_location="cpu", weights_only=False)
                 hp = checkpoint["hyperparams"]
@@ -254,11 +262,22 @@ class ModelRegistry:
 
 app = FastAPI(
     title="G_One_Sync AI — Clinical Deterioration Prediction API",
-    version="2.0.0",
-    description="Real-time ICU deterioration risk scoring with explainability",
+    version="3.0.0",
+    description="Real-time ICU deterioration risk scoring with explainability and mobile companion API",
 )
 
 registry = ModelRegistry()
+
+# ── Mount Mobile / Auth / Notification Routers (Phase 8) ────────────────
+try:
+    from src.serving.mobile_router import auth_router, mobile_router, notification_router
+
+    app.include_router(auth_router)
+    app.include_router(mobile_router)
+    app.include_router(notification_router)
+    logger.info("Mobile API routers mounted: /auth, /mobile, /notifications")
+except ImportError as e:
+    logger.warning("Mobile routers not available (missing dependency): {}", e)
 
 
 def _classify_risk(probability: float) -> tuple[RiskLevel, int, list[str]]:
@@ -286,14 +305,14 @@ def _classify_risk(probability: float) -> tuple[RiskLevel, int, list[str]]:
 
 def _build_feature_vector(req: PredictionRequest) -> np.ndarray:
     """Build feature vector from request vitals + labs."""
-    v = req.vitals
-    l = req.labs
+    vitals = req.vitals
+    labs = req.labs
     features = np.array([[
-        v.heart_rate, v.respiratory_rate, v.spo2_pct,
-        v.temperature_c, v.systolic_bp, v.diastolic_bp,
-        v.oxygen_flow, v.mobility_score, v.nurse_alert,
-        l.wbc_count, l.lactate, l.creatinine,
-        l.crp_level, l.hemoglobin, l.sepsis_risk_score,
+        vitals.heart_rate, vitals.respiratory_rate, vitals.spo2_pct,
+        vitals.temperature_c, vitals.systolic_bp, vitals.diastolic_bp,
+        vitals.oxygen_flow, vitals.mobility_score, vitals.nurse_alert,
+        labs.wbc_count, labs.lactate, labs.creatinine,
+        labs.crp_level, labs.hemoglobin, labs.sepsis_risk_score,
     ]], dtype=np.float32)
     return features
 
@@ -356,6 +375,22 @@ async def predict(request: PredictionRequest):
 
     risk_level, risk_score, alerts = _classify_risk(prob)
     elapsed_ms = (time.time() - start) * 1000
+
+    # ── Phase 8: update mobile patient store with latest prediction ───────
+    try:
+        from src.serving.mobile_router import update_patient_risk
+
+        update_patient_risk(
+            patient_id=request.patient_id,
+            risk_level=risk_level.value,
+            risk_score=risk_score,
+            probability=round(prob, 4),
+            vitals=request.vitals.model_dump(),
+            labs=request.labs.model_dump(),
+            alerts=alerts,
+        )
+    except Exception as e:
+        logger.debug("Could not update mobile patient store: {}", e)
 
     return PredictionResponse(
         patient_id=request.patient_id,

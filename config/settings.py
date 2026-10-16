@@ -279,6 +279,41 @@ class ContinuousSettings(BaseSettings):
     model_config = ConfigDict(env_prefix="JEEVAN_CL_")
 
 
+class MobileSettings(BaseSettings):
+    """Mobile companion app configuration (Phase 8).
+
+    Controls JWT authentication, Firebase Cloud Messaging push
+    notifications, and mobile-optimized API behavior. Both auth
+    and FCM are feature-flagged OFF by default so the existing
+    unauthenticated serving API remains unchanged.
+    """
+
+    # ── JWT Authentication ───────────────────────────────────────
+    auth_enabled: bool = False  # Feature flag — off by default
+    jwt_secret: str = "jeevansync-mobile-jwt-secret-key-32b!"  # Overridable via JEEVAN_MOBILE_JWT_SECRET
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_hours: int = 24
+    jwt_refresh_expiry_hours: int = 168  # 7 days
+
+    # ── Firebase Cloud Messaging ─────────────────────────────────
+    fcm_enabled: bool = False  # Feature flag — off by default
+    fcm_server_key: str = ""  # Set via JEEVAN_MOBILE_FCM_SERVER_KEY
+    fcm_project_id: str = ""
+
+    # ── Push notification thresholds ─────────────────────────────
+    push_critical_threshold: float = 0.75  # Push for CRITICAL risk
+    push_high_threshold: float = 0.50  # Push for HIGH risk
+
+    # ── Device registry persistence ──────────────────────────────
+    device_registry_path: Path = PROJECT_ROOT / "data" / "device_registry.json"
+
+    # ── Demo physician credentials (dev only) ────────────────────
+    demo_username: str = "dr.sharma"
+    demo_password_hash: str = ""  # bcrypt hash; empty = accept any password in dev
+
+    model_config = ConfigDict(env_prefix="JEEVAN_MOBILE_")
+
+
 # ── Singleton instances ──────────────────────────────────────────────────
 data_settings = DataSettings()
 kafka_settings = KafkaSettings()
@@ -289,3 +324,4 @@ serving_settings = ServingSettings()
 emr_settings = EMRSettings()
 federated_settings = FederatedSettings()
 continuous_settings = ContinuousSettings()
+mobile_settings = MobileSettings()

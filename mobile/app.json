@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "G_One_Sync AI",
+    "slug": "g-one-sync-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.gonesync.companion",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"],
+        "NSFaceIDUsageDescription": "Enables biometric login for fast ICU clinical alerts review."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "ai.gonesync.companion",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow G_One_Sync to use Face ID for fast clinician authentication."
+        }
+      ]
+    ]
+  }
+}
