@@ -314,6 +314,48 @@ class MobileSettings(BaseSettings):
     model_config = ConfigDict(env_prefix="JEEVAN_MOBILE_")
 
 
+class MultiOutcomeSettings(BaseSettings):
+    """Multi-outcome prediction configuration (Phase 10).
+
+    Extends the binary deterioration model to simultaneously predict
+    sepsis, cardiac arrest, and respiratory failure. When
+    multi_outcome_enabled is False (default), the entire multi-outcome
+    subsystem is inert and the existing binary prediction pipeline
+    runs exactly as before.
+    """
+
+    # Master toggle — off by default
+    multi_outcome_enabled: bool = False
+
+    # Target outcome definitions
+    outcome_targets: list[str] = Field(default=[
+        "deterioration_next_12h",
+        "sepsis_next_6h",
+        "cardiac_arrest_next_12h",
+        "respiratory_failure_next_12h",
+    ])
+
+    # Per-outcome task weights for multi-task loss (higher = rarer outcome)
+    task_weights: list[float] = Field(default=[1.0, 1.5, 2.0, 1.5])
+
+    # Multi-head model architecture
+    shared_d_model: int = 64
+    shared_nhead: int = 4
+    shared_num_layers: int = 2
+    head_hidden_dim: int = 64
+    head_dropout: float = 0.3
+
+    # Training
+    multi_epochs: int = 60
+    multi_learning_rate: float = 5e-4
+    multi_batch_size: int = 32
+
+    # Model artifacts
+    multi_artifacts_dir: Path = PROJECT_ROOT / "models" / "artifacts" / "multi_outcome"
+
+    model_config = ConfigDict(env_prefix="JEEVAN_MULTI_")
+
+
 # ── Singleton instances ──────────────────────────────────────────────────
 data_settings = DataSettings()
 kafka_settings = KafkaSettings()
@@ -325,3 +367,4 @@ emr_settings = EMRSettings()
 federated_settings = FederatedSettings()
 continuous_settings = ContinuousSettings()
 mobile_settings = MobileSettings()
+multi_outcome_settings = MultiOutcomeSettings()

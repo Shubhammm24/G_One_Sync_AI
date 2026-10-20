@@ -13,10 +13,10 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset, DataLoader
 from loguru import logger
+from torch.utils.data import DataLoader, Dataset
 
-from config.settings import model_settings, data_settings
+from config.settings import data_settings, model_settings
 
 
 class ICUTabularDataset(Dataset):

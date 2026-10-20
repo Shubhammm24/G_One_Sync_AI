@@ -25,7 +25,6 @@ from config.settings import model_settings
 from src.modeling.base_trainer import BaseTrainer
 from src.modeling.data_loader import ICUSequenceDataset
 
-
 # ── Model Architecture ──────────────────────────────────────────────────
 
 
@@ -116,8 +115,6 @@ class TemporalTransformerModel(nn.Module):
         Returns:
             logits: (batch,)
         """
-        B = x.size(0)
-
         # Project input features to d_model
         x = self.input_proj(x)  # (B, T, d_model)
 

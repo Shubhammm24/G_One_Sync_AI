@@ -7,20 +7,20 @@ via Prometheus for real-time monitoring and Grafana dashboards.
 
 from __future__ import annotations
 
-import time
 import threading
+import time
 from typing import Optional
 
 from loguru import logger
 from prometheus_client import (
+    CONTENT_TYPE_LATEST,
     Counter,
     Gauge,
     Histogram,
     Info,
     Summary,
-    start_http_server,
     generate_latest,
-    CONTENT_TYPE_LATEST,
+    start_http_server,
 )
 
 

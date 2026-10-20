@@ -69,9 +69,34 @@ jobs:
         run: |
           pytest tests/ -v --cov=src --cov-report=term-missing --tb=short
 
+      - name: Generate SBOM
+        run: python compliance/scripts/generate_sbom.py
+
+      - name: Validate Model Card
+        run: python compliance/scripts/validate_model_card.py
+
+      - name: Generate Traceability Matrix
+        run: python compliance/scripts/generate_traceability.py
+
+      - name: Backwards Compatibility Check
+        run: |
+          unset JEEVAN_EMR_ENABLED || true
+          unset JEEVAN_FL_ENABLED || true
+          unset JEEVAN_CL_CONTINUOUS_ENABLED || true
+          pytest tests/ -v --tb=short -q
+
       - name: Upload coverage
         if: matrix.python-version == '3.12'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/
+
+      - name: Upload compliance artifacts
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-artifacts
+          path: |
+            compliance/sbom/
+            compliance/traceability/

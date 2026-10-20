@@ -32,10 +32,10 @@ from loguru import logger
 
 from config.settings import federated_settings, model_settings
 from src.federated.aggregator import (
-    create_aggregator,
     compute_aggregation_weights,
-    serialize_state_dict,
+    create_aggregator,
     deserialize_state_dict,
+    serialize_state_dict,
 )
 from src.federated.fl_schemas import (
     AggregatedResult,
@@ -541,7 +541,7 @@ class FLCoordinator:
         while not self.is_training_complete:
             try:
                 # Start round
-                config = self.start_round()
+                self.start_round()
 
                 # Wait for all updates (with timeout)
                 start = time.time()

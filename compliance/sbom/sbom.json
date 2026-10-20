@@ -1,0 +1,236 @@
+{
+  "sbom_version": "1.0",
+  "generated_at": "2026-10-21T03:02:47.641043",
+  "generator": "G_One_Sync AI SBOM Generator",
+  "project": "G_One_Sync AI",
+  "python_version": "3.12.6",
+  "total_direct_dependencies": 32,
+  "total_installed_packages": 171,
+  "dependencies": [
+    {
+      "name": "numpy",
+      "declared_constraint": ">=2.0",
+      "installed_version": "2.4.3",
+      "license": "BSD-3-Clause",
+      "direct_dependency": true
+    },
+    {
+      "name": "pandas",
+      "declared_constraint": ">=2.2",
+      "installed_version": "2.3.3",
+      "license": "BSD-3-Clause",
+      "direct_dependency": true
+    },
+    {
+      "name": "scipy",
+      "declared_constraint": ">=1.13",
+      "installed_version": "1.17.1",
+      "license": "BSD-3-Clause",
+      "direct_dependency": true
+    },
+    {
+      "name": "pyarrow",
+      "declared_constraint": ">=16.0",
+      "installed_version": "23.0.1",
+      "license": "Apache-2.0",
+      "direct_dependency": true
+    },
+    {
+      "name": "pydantic",
+      "declared_constraint": ">=2.7",
+      "installed_version": "2.12.5",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "pydantic-settings",
+      "declared_constraint": ">=2.3",
+      "installed_version": "2.13.1",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "python-dotenv",
+      "declared_constraint": ">=1.0",
+      "installed_version": "1.2.2",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "fastapi",
+      "declared_constraint": ">=0.111",
+      "installed_version": "0.135.3",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "uvicorn[standard]",
+      "declared_constraint": ">=0.30",
+      "installed_version": "not installed",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "httpx",
+      "declared_constraint": ">=0.27",
+      "installed_version": "0.28.1",
+      "license": "BSD-3-Clause",
+      "direct_dependency": true
+    },
+    {
+      "name": "orjson",
+      "declared_constraint": ">=3.10",
+      "installed_version": "3.11.8",
+      "license": "Apache-2.0 / MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "loguru",
+      "declared_constraint": ">=0.7",
+      "installed_version": "0.7.3",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "scikit-learn",
+      "declared_constraint": ">=1.5",
+      "installed_version": "1.8.0",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "xgboost",
+      "declared_constraint": ">=2.1",
+      "installed_version": "3.2.0",
+      "license": "Apache-2.0",
+      "direct_dependency": true
+    },
+    {
+      "name": "lightgbm",
+      "declared_constraint": ">=4.4",
+      "installed_version": "4.6.0",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "mlflow",
+      "declared_constraint": ">=2.14",
+      "installed_version": "3.11.1",
+      "license": "Apache-2.0",
+      "direct_dependency": true
+    },
+    {
+      "name": "optuna",
+      "declared_constraint": ">=3.6",
+      "installed_version": "4.8.0",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "shap",
+      "declared_constraint": ">=0.45",
+      "installed_version": "0.51.0",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "plotly",
+      "declared_constraint": ">=5.22",
+      "installed_version": "5.24.1",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "prometheus-client",
+      "declared_constraint": ">=0.20",
+      "installed_version": "0.24.1",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "tqdm",
+      "declared_constraint": ">=4.66",
+      "installed_version": "4.67.3",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "joblib",
+      "declared_constraint": ">=1.4",
+      "installed_version": "1.5.3",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "fhirpy",
+      "declared_constraint": ">=2.0",
+      "installed_version": "2.3.0",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "hl7apy",
+      "declared_constraint": ">=1.3",
+      "installed_version": "1.3.5",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "grpcio",
+      "declared_constraint": ">=1.64",
+      "installed_version": "not installed",
+      "license": "Apache-2.0",
+      "direct_dependency": true
+    },
+    {
+      "name": "grpcio-tools",
+      "declared_constraint": ">=1.64",
+      "installed_version": "not installed",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "opacus",
+      "declared_constraint": ">=1.5",
+      "installed_version": "not installed",
+      "license": "Apache-2.0",
+      "direct_dependency": true
+    },
+    {
+      "name": "PyJWT",
+      "declared_constraint": ">=2.8",
+      "installed_version": "2.15.1",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "bcrypt",
+      "declared_constraint": ">=4.1",
+      "installed_version": "5.0.0",
+      "license": "Apache-2.0",
+      "direct_dependency": true
+    },
+    {
+      "name": "pytest",
+      "declared_constraint": ">=8.2",
+      "installed_version": "9.0.3",
+      "license": "MIT",
+      "direct_dependency": true
+    },
+    {
+      "name": "pytest-asyncio",
+      "declared_constraint": ">=0.23",
+      "installed_version": "1.3.0",
+      "license": "Unknown",
+      "direct_dependency": true
+    },
+    {
+      "name": "pip-audit",
+      "declared_constraint": ">=2.7",
+      "installed_version": "not installed",
+      "license": "Unknown",
+      "direct_dependency": true
+    }
+  ],
+  "vulnerabilities": []
+}

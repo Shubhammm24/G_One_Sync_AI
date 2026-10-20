@@ -21,15 +21,15 @@ from typing import Optional
 
 import numpy as np
 from loguru import logger
-from sklearn.calibration import calibration_curve, CalibratedClassifierCV
+from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.isotonic import IsotonicRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     brier_score_loss,
     f1_score,
-    roc_auc_score,
     precision_score,
     recall_score,
+    roc_auc_score,
 )
 
 from config.settings import model_settings

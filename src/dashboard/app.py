@@ -25,14 +25,13 @@ from typing import Optional
 
 import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 
-from src.monitoring.metrics_collector import MetricsCollector
-from src.monitoring.drift_detector import DriftDetector
 from src.monitoring.alerting import AlertingEngine
-
+from src.monitoring.drift_detector import DriftDetector
+from src.monitoring.metrics_collector import MetricsCollector
 
 # ── App Setup ────────────────────────────────────────────────────────
 

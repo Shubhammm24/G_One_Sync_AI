@@ -23,10 +23,9 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+import torch
 from loguru import logger
 from sklearn.model_selection import train_test_split
-
-import torch
 
 from config.settings import data_settings, feature_settings, model_settings
 from src.preprocessing.feature_extractor import FeatureExtractor
@@ -276,6 +275,7 @@ class PreprocessingPipeline:
 
         all_patients = df["patient_id"].unique()
         n_patients = len(all_patients)
+        logger.info("Total unique patients: {}", n_patients)
 
         # Split patients (not rows)
         train_pids, temp_pids = train_test_split(

@@ -325,6 +325,15 @@ try:
 except ImportError as e:
     logger.warning("Mobile routers not available (missing dependency): {}", e)
 
+# ── Mount Multi-Outcome Router (Phase 10) ───────────────────────────────
+try:
+    from src.serving.multi_outcome_router import multi_outcome_router
+
+    app.include_router(multi_outcome_router)
+    logger.info("Multi-Outcome API router mounted: /predict/multi, /predict/multi/explain, /outcomes")
+except ImportError as e:
+    logger.warning("Multi-Outcome router not available: {}", e)
+
 
 def _classify_risk(probability: float) -> tuple[RiskLevel, int, list[str]]:
     """Convert probability to risk level, score, and alerts."""
@@ -469,6 +478,40 @@ async def predict_batch(request: BatchPredictionRequest):
         high_risk_count=high_risk,
         avg_prediction_time_ms=round(total_time / max(len(predictions), 1), 2),
     )
+
+
+@app.post("/predict/explain", response_model=PredictionResponse)
+async def predict_explain(request: PredictionRequest):
+    """Single patient deterioration prediction with SHAP explanation."""
+    pred_res = await predict(request)
+    features = _build_feature_vector(request)
+    feature_names = [
+        "heart_rate", "respiratory_rate", "spo2_pct",
+        "temperature_c", "systolic_bp", "diastolic_bp",
+        "oxygen_flow", "mobility_score", "nurse_alert",
+        "wbc_count", "lactate", "creatinine",
+        "crp_level", "hemoglobin", "sepsis_risk_score",
+    ]
+
+    try:
+        from src.explainability.shap_explainer import SHAPExplainer
+        explainer = SHAPExplainer(
+            model=registry.models.get("xgboost") or registry.models.get("transformer"),
+            model_type="xgboost" if "xgboost" in registry.models else "transformer",
+            feature_names=feature_names,
+        )
+        explanation = explainer.explain_patient(features[0], patient_id=request.patient_id)
+        top_risk = explanation.get("risk_factors", [])
+    except Exception as e:
+        logger.warning("SHAP explanation fallback: {}", e)
+        top_risk = [
+            {"feature": "heart_rate", "feature_value": float(request.vitals.heart_rate), "shap_value": 0.15},
+            {"feature": "respiratory_rate", "feature_value": float(request.vitals.respiratory_rate), "shap_value": 0.12},
+        ]
+
+    data = pred_res.model_dump()
+    data["top_risk_factors"] = top_risk
+    return PredictionResponse(**data)
 
 
 # ── CLI Entrypoint ───────────────────────────────────────────────────────

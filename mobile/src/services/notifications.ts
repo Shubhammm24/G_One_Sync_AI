@@ -9,16 +9,23 @@ import { Platform } from 'react-native';
 import { apiService } from './api';
 import { getUsername } from '../utils/auth';
 
-// Configure notification presentation rules
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Configure notification presentation rules (native only)
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export const registerForPushNotificationsAsync = async (): Promise<string | null> => {
+  if (Platform.OS === 'web') {
+    return null;
+  }
   let token: string | null = null;
 
   try {
@@ -52,8 +59,10 @@ export const registerForPushNotificationsAsync = async (): Promise<string | null
     // Register token with backend
     const physicianId = getUsername() || 'dr.sharma';
     const deviceType = Platform.OS === 'ios' ? 'ios' : 'android';
-    await apiService.registerDevice(token, deviceType, physicianId);
-    console.log('FCM Device Token registered successfully:', token);
+    if (token) {
+      await apiService.registerDevice(token, deviceType, physicianId);
+      console.log('FCM Device Token registered successfully:', token);
+    }
   } catch (err) {
     console.warn('Failed to obtain device push token:', err);
   }

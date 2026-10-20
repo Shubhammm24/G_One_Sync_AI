@@ -53,7 +53,6 @@ from src.federated.privacy import (
 )
 from src.federated.secure_aggregation import SecureAggregationManager
 
-
 # ── Fixtures ─────────────────────────────────────────────────────────────
 
 
@@ -675,7 +674,7 @@ class TestFLCoordinator:
         model = SimpleModel()
         coord.set_initial_model("bilstm", model.state_dict())
 
-        config = coord.start_round()
+        coord.start_round()
 
         # Submit updates
         sd1 = serialize_state_dict(SimpleModel().state_dict())

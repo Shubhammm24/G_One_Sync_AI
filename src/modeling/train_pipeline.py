@@ -26,12 +26,12 @@ import pandas as pd
 import torch
 from loguru import logger
 
-from config.settings import data_settings, model_settings, feature_settings
+from config.settings import data_settings, feature_settings, model_settings
 from src.modeling.data_loader import load_processed_splits
-from src.modeling.xgboost_trainer import XGBoostTrainer
+from src.modeling.ensemble import HybridEnsemble
 from src.modeling.lstm_trainer import BiLSTMTrainer
 from src.modeling.transformer_trainer import TransformerTrainer
-from src.modeling.ensemble import HybridEnsemble
+from src.modeling.xgboost_trainer import XGBoostTrainer
 from src.preprocessing.sliding_window import SlidingWindowBuilder
 
 
@@ -329,7 +329,7 @@ def run_calibration_and_thresholds(
         # 1. Calibrate probabilities (fit on val, apply to test)
         calibrator = ProbabilityCalibrator(method="isotonic")
         calibrator.fit(val_prob, val_labels)
-        test_prob_calibrated = calibrator.transform(test_prob)
+        _ = calibrator.transform(test_prob)
 
         # 2. Find optimal thresholds on val set
         thresholds = threshold_optimizer.optimize(

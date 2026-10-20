@@ -7,7 +7,7 @@ Uses Optuna with pruning for efficient search on GPU.
 
 from __future__ import annotations
 
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import numpy as np
 import optuna

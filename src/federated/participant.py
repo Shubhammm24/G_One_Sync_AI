@@ -31,7 +31,7 @@ import torch.nn as nn
 from loguru import logger
 
 from config.settings import federated_settings, model_settings
-from src.federated.aggregator import serialize_state_dict, deserialize_state_dict
+from src.federated.aggregator import deserialize_state_dict, serialize_state_dict
 from src.federated.fl_schemas import (
     FLRoundConfig,
     ModelUpdate,
@@ -39,9 +39,9 @@ from src.federated.fl_schemas import (
 )
 from src.federated.privacy import (
     RDPAccountant,
-    clip_gradients,
     add_gaussian_noise,
     add_noise_to_state_dict,
+    clip_gradients,
 )
 
 

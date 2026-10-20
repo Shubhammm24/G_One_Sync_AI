@@ -4,6 +4,7 @@
  */
 
 import * as LocalAuthentication from 'expo-local-authentication';
+import { Platform } from 'react-native';
 
 interface StoredSession {
   accessToken: string;
@@ -59,6 +60,7 @@ export const isSessionValid = (): boolean => {
  * Authenticate using device biometrics (Face ID / Fingerprint)
  */
 export const authenticateWithBiometrics = async (): Promise<boolean> => {
+  if (Platform.OS === 'web') return false;
   try {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
     if (!hasHardware) return false;

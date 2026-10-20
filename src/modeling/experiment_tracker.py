@@ -12,9 +12,9 @@ from pathlib import Path
 from typing import Any, Optional
 
 import mlflow
+import mlflow.pytorch
 import mlflow.sklearn
 import mlflow.xgboost
-import mlflow.pytorch
 from loguru import logger
 
 from config.settings import model_settings

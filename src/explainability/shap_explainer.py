@@ -253,6 +253,118 @@ class SHAPExplainer:
 
         return result
 
+    def explain_multi_outcome(
+        self,
+        patient_features: np.ndarray,
+        patient_id: Optional[int] = None,
+        outcome_names: Optional[list[str]] = None,
+        background: Optional[np.ndarray] = None,
+        top_n: int = 5,
+    ) -> dict[str, list[dict[str, Any]]]:
+        """
+        Generate feature importance explanations for each clinical outcome.
+
+        Supports MultiHeadPredictionModel, tree-based models, and gradient attribution.
+
+        Args:
+            patient_features: (F,) or (1, F) or (1, T, F) feature array
+            patient_id: Optional patient identifier
+            outcome_names: List of outcomes to explain (default: canonical 4)
+            background: Optional background samples
+            top_n: Number of top features to return per outcome
+
+        Returns:
+            Dict mapping outcome name to list of feature importance dicts:
+            {outcome: [{"feature": str, "value": float, "shap_value": float, "direction": str}]}
+        """
+        if outcome_names is None:
+            try:
+                from src.modeling.multi_outcome.label_definitions import OUTCOME_COLUMNS
+                outcome_names = list(OUTCOME_COLUMNS)
+            except ImportError:
+                outcome_names = [
+                    "deterioration_next_12h",
+                    "sepsis_next_6h",
+                    "cardiac_arrest_next_12h",
+                    "respiratory_failure_next_12h",
+                ]
+
+        if patient_features.ndim == 1:
+            feat_2d = patient_features.reshape(1, -1)
+        else:
+            feat_2d = patient_features
+
+        num_features = feat_2d.shape[-1]
+        names = self.feature_names if len(self.feature_names) == num_features else [
+            f"feature_{i}" for i in range(num_features)
+        ]
+
+        explanations: dict[str, list[dict[str, Any]]] = {}
+
+        # ── Case 1: MultiHeadPredictionModel (PyTorch gradient attribution) ──
+        if hasattr(self.model, "heads") and hasattr(self.model, "encode"):
+            import torch
+
+            device = next(self.model.parameters()).device
+            self.model.eval()
+
+            for outcome in outcome_names:
+                if outcome not in self.model.heads:
+                    continue
+
+                x_tensor = torch.tensor(feat_2d, dtype=torch.float32, device=device)
+                if x_tensor.ndim == 2:
+                    x_tensor = x_tensor.unsqueeze(1).repeat(1, 24, 1)
+                x_tensor.requires_grad_(True)
+
+                self.model.zero_grad()
+                logits = self.model(x_tensor)
+                target_logit = logits[outcome]
+                target_logit.backward()
+
+                # Gradient * Input attribution
+                with torch.no_grad():
+                    grad = x_tensor.grad
+                    if grad is not None:
+                        attr = (grad * x_tensor).sum(dim=1).squeeze(0).cpu().numpy()
+                    else:
+                        attr = np.zeros(num_features)
+
+                top_indices = np.argsort(np.abs(attr))[-top_n:][::-1]
+                vals = feat_2d.flatten()[:num_features]
+                records = []
+                for idx in top_indices:
+                    sv = float(attr[idx])
+                    records.append({
+                        "feature": names[idx] if idx < len(names) else f"feature_{idx}",
+                        "value": float(vals[idx]) if idx < len(vals) else 0.0,
+                        "shap_value": round(sv, 4),
+                        "direction": "risk" if sv > 0 else "protective",
+                    })
+                explanations[outcome] = records
+
+        # ── Case 2: Standard single-model explainer fallback ──────────────
+        else:
+            base_exp = self.explain_patient(patient_features, patient_id=patient_id, background=background)
+            all_factors = (base_exp.get("risk_factors", []) + base_exp.get("protective_factors", []))
+            formatted = [
+                {
+                    "feature": f.get("feature", "unknown"),
+                    "value": float(f.get("feature_value", 0.0)),
+                    "shap_value": round(float(f.get("shap_value", 0.0)), 4),
+                    "direction": "risk" if float(f.get("shap_value", 0.0)) > 0 else "protective",
+                }
+                for f in all_factors[:top_n]
+            ]
+            for outcome in outcome_names:
+                explanations[outcome] = formatted
+
+        logger.info(
+            "Multi-outcome explanation generated for patient {}: {} outcomes",
+            patient_id or "unknown", len(explanations),
+        )
+        return explanations
+
     # ── Batch Explanations ───────────────────────────────────────────────
 
     def explain_batch(

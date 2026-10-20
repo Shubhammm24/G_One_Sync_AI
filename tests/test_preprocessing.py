@@ -9,13 +9,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.preprocessing.schema_validator import SchemaValidator, ValidationReport
-from src.preprocessing.imputation import ImputationEngine
-from src.preprocessing.sliding_window import SlidingWindowBuilder
 from src.preprocessing.feature_extractor import FeatureExtractor
+from src.preprocessing.imputation import ImputationEngine
 from src.preprocessing.label_generator import LabelGenerator
+from src.preprocessing.schema_validator import SchemaValidator, ValidationReport
+from src.preprocessing.sliding_window import SlidingWindowBuilder
 from src.preprocessing.time_alignment import TimeAligner
-
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
 

@@ -23,11 +23,11 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
+    precision_recall_curve,
     precision_score,
     recall_score,
     roc_auc_score,
     roc_curve,
-    precision_recall_curve,
 )
 
 from config.settings import model_settings

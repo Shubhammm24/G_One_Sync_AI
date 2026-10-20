@@ -133,7 +133,7 @@ class TestRiskClassification:
     """Tests for risk level classification logic."""
 
     def test_risk_levels(self):
-        from src.serving.model_server import _classify_risk, RiskLevel
+        from src.serving.model_server import RiskLevel, _classify_risk
 
         level, score, alerts = _classify_risk(0.10)
         assert level == RiskLevel.LOW
@@ -150,7 +150,12 @@ class TestRiskClassification:
         assert len(alerts) >= 2  # Should have multiple alerts
 
     def test_feature_vector_shape(self):
-        from src.serving.model_server import _build_feature_vector, PredictionRequest, VitalSigns, LabResults
+        from src.serving.model_server import (
+            LabResults,
+            PredictionRequest,
+            VitalSigns,
+            _build_feature_vector,
+        )
 
         req = PredictionRequest(
             patient_id=1,

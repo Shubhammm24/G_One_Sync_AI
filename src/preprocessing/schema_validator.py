@@ -16,7 +16,6 @@ from loguru import logger
 
 from config.settings import feature_settings
 
-
 # ── Clinical Range Definitions ───────────────────────────────────────────
 
 CLINICAL_RANGES: dict[str, tuple[float, float]] = {
@@ -84,7 +83,7 @@ class ValidationReport:
 
     def summary(self) -> str:
         lines = [
-            f"Validation Report:",
+            "Validation Report:",
             f"  Total rows:      {self.total_rows}",
             f"  Valid rows:      {self.valid_rows}",
             f"  Flagged rows:    {self.flagged_rows}",

@@ -1,0 +1,186 @@
+[
+  {
+    "id": "DI-001",
+    "title": "Deterioration Prediction",
+    "implementation": [
+      "src/serving/model_server.py"
+    ],
+    "tests": [
+      "tests/test_serving.py"
+    ]
+  },
+  {
+    "id": "DI-002",
+    "title": "Ensemble Prediction",
+    "implementation": [
+      "src/modeling/ensemble.py"
+    ],
+    "tests": [
+      "tests/test_modeling.py"
+    ]
+  },
+  {
+    "id": "DI-003",
+    "title": "Continuous Real-Time Scoring",
+    "implementation": [
+      "src/serving/model_server.py"
+    ],
+    "tests": [
+      "tests/test_serving.py"
+    ]
+  },
+  {
+    "id": "DI-004",
+    "title": "SHAP Explainability",
+    "implementation": [
+      "src/explainability/shap_explainer.py"
+    ],
+    "tests": [
+      "tests/test_serving.py"
+    ]
+  },
+  {
+    "id": "DI-005",
+    "title": "Model Discrimination",
+    "implementation": [
+      "src/modeling/train_pipeline.py"
+    ],
+    "tests": [
+      "tests/test_modeling.py"
+    ]
+  },
+  {
+    "id": "DI-006",
+    "title": "Model Calibration",
+    "implementation": [
+      "src/modeling/calibration.py"
+    ],
+    "tests": [
+      "tests/test_modeling.py"
+    ]
+  },
+  {
+    "id": "DI-007",
+    "title": "Sensitivity/Specificity Targets",
+    "implementation": [
+      "config/settings.py"
+    ],
+    "tests": [
+      "tests/test_serving.py"
+    ]
+  },
+  {
+    "id": "DI-008",
+    "title": "Real-Time Alert Delivery",
+    "implementation": [
+      "src/monitoring/alerting.py"
+    ],
+    "tests": [
+      "tests/test_serving.py"
+    ]
+  },
+  {
+    "id": "DI-009",
+    "title": "Multi-Channel Alerting",
+    "implementation": [
+      "src/serving/push_notifications.py"
+    ],
+    "tests": [
+      "tests/test_mobile_api.py"
+    ]
+  },
+  {
+    "id": "DI-010",
+    "title": "Configurable Alert Thresholds",
+    "implementation": [
+      "config/settings.py"
+    ],
+    "tests": [
+      "tests/test_serving.py"
+    ]
+  },
+  {
+    "id": "DI-011",
+    "title": "Patient Dashboard",
+    "implementation": [
+      "src/dashboard/app.py"
+    ],
+    "tests": []
+  },
+  {
+    "id": "DI-012",
+    "title": "Mobile Application",
+    "implementation": [
+      "mobile/"
+    ],
+    "tests": [
+      "tests/test_mobile_api.py"
+    ]
+  },
+  {
+    "id": "DI-013",
+    "title": "Input Data Validation",
+    "implementation": [
+      "src/ingestion/schemas.py"
+    ],
+    "tests": [
+      "tests/test_ingestion.py"
+    ]
+  },
+  {
+    "id": "DI-014",
+    "title": "FHIR R4 Integration",
+    "implementation": [
+      "src/ingestion/emr/fhir_mapper.py"
+    ],
+    "tests": [
+      "tests/test_emr_integration.py"
+    ]
+  },
+  {
+    "id": "DI-015",
+    "title": "HL7v2 Integration",
+    "implementation": [
+      "src/ingestion/emr/hl7_mapper.py"
+    ],
+    "tests": [
+      "tests/test_emr_integration.py"
+    ]
+  },
+  {
+    "id": "DI-016",
+    "title": "System Availability",
+    "implementation": [
+      "docker/docker-compose.yml"
+    ],
+    "tests": []
+  },
+  {
+    "id": "DI-017",
+    "title": "Graceful Degradation",
+    "implementation": [
+      "src/ingestion/kafka_producer.py"
+    ],
+    "tests": [
+      "tests/test_ingestion.py"
+    ]
+  },
+  {
+    "id": "DI-018",
+    "title": "Authentication",
+    "implementation": [
+      "src/serving/auth.py"
+    ],
+    "tests": [
+      "tests/test_mobile_api.py"
+    ]
+  },
+  {
+    "id": "DI-019",
+    "title": "Data Protection",
+    "implementation": [
+      "config/logging_config.py"
+    ],
+    "tests": []
+  }
+]

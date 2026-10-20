@@ -10,17 +10,16 @@ from pathlib import Path
 
 import pytest
 
+from src.ingestion.data_lake_router import DataLakeRouter
+from src.ingestion.kafka_producer import LocalFileQueue
 from src.ingestion.schemas import (
     FlatICURow,
     ICUDataPayload,
-    LabResultsPayload,
-    VitalSignsPayload,
-    OxygenDevice,
     IngestionResponse,
+    LabResultsPayload,
+    OxygenDevice,
+    VitalSignsPayload,
 )
-from src.ingestion.data_lake_router import DataLakeRouter
-from src.ingestion.kafka_producer import LocalFileQueue
-
 
 # ── Schema Tests ─────────────────────────────────────────────────────────
 

@@ -14,8 +14,8 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from scipy import stats as sp_stats
 from loguru import logger
+from scipy import stats as sp_stats
 from tqdm import tqdm
 
 from config.settings import feature_settings
