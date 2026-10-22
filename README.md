@@ -99,119 +99,175 @@ G_One_Sync AI addresses this by:
 
 ## 🏗 System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              DATA SOURCES                                      │
-│  🏥 Bedside Monitors    🧪 Lab Info System    📋 EMR / EHR (FHIR + HL7v2)     │
-└──────────┬──────────────────────┬──────────────────────┬────────────────────────┘
-           │                     │                      │
-           ▼                     ▼                      ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                     INGESTION LAYER (Port 8000)                                │
-│  ┌──────────────────┐   ┌──────────────────┐   ┌────────────────────┐          │
-│  │ FastAPI Ingest    │──▶│ Redpanda / Kafka  │──▶│ Data Lake Router   │          │
-│  │ Pydantic Validate │   │ Event Streaming   │   │ Parquet Storage    │          │
-│  └──────────────────┘   └──────────────────┘   └────────────────────┘          │
-│                          ┌──────────────────┐          ▲                       │
-│                          │ Local File Queue  │──────────┘                       │
-│                          │ (Kafka Fallback)  │                                  │
-│                          └──────────────────┘                                  │
-└─────────────────────────────────┬───────────────────────────────────────────────┘
-                                  │
-                                  ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                      PREPROCESSING PIPELINE (GPU)                              │
-│  Schema Validator ──▶ Imputation ──▶ Time Aligner ──▶ Feature Extractor (215)  │
-│                          ──▶ Sliding Windows (12h) ──▶ Label Generator          │
-└─────────────────────────────────┬───────────────────────────────────────────────┘
-                                  │
-              ┌───────────────────┼───────────────────┐
-              ▼                   ▼                   ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                       MODEL TRAINING (GPU + MLflow)                             │
-│  ┌─────────────┐   ┌─────────────┐   ┌──────────────────┐   ┌──────────────┐  │
-│  │  XGBoost     │   │  BiLSTM      │   │  Transformer      │   │ Optuna HPO   │  │
-│  │  GPU Hist.   │   │  2-Layer     │   │  d=64, nhead=4    │   │ 100 Trials   │  │
-│  └──────┬──────┘   └──────┬──────┘   └────────┬─────────┘   └──────────────┘  │
-│         └─────────────────┼────────────────────┘                               │
-│                           ▼                                                    │
-│              ┌────────────────────────┐    ┌────────────────────┐              │
-│              │  Hybrid Ensemble        │───▶│ Probability Calib.  │              │
-│              │  (Learned Stacking)     │    │ (Isotonic Regr.)    │              │
-│              └────────────────────────┘    └─────────┬──────────┘              │
-│                                    ┌────────────────┐│                          │
-│                                    │ SHAP Explainer  ││                          │
-│                                    │ Tree + Deep     ││                          │
-│                                    └───────┬────────┘│                          │
-└────────────────────────────────────────────┼─────────┼──────────────────────────┘
-                                             │         │
-                                             ▼         ▼
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                       SERVING LAYER (Port 8001)                                │
-│  ┌──────────────────┐  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │ FastAPI Model     │  │ JWT Auth     │  │ Mobile Router│  │ Multi-Outcome │  │
-│  │ Server            │  │ Middleware   │  │ Watchlist    │  │ Router        │  │
-│  └──────────────────┘  └──────────────┘  └──────┬───────┘  └───────────────┘  │
-│                                                  │                             │
-│                                          ┌───────▼───────┐                     │
-│                                          │ FCM Push       │                     │
-│                                          │ Notifications  │                     │
-│                                          └───────┬───────┘                     │
-└──────────┬───────────────────────────────────────┼─────────────────────────────┘
-           │                                       │
-           ▼                                       ▼
-┌──────────────────────────┐          ┌──────────────────────────┐
-│  MONITORING              │          │  MOBILE APP              │
-│  • Prometheus (9090)     │          │  React Native (Expo)     │
-│  • Drift Detector (PSI)  │          │  iOS / Android / Web     │
-│  • Alerting Engine       │          └──────────────────────────┘
-└──────────┬───────────────┘
-           │
-           ▼
-┌──────────────────────────┐          ┌──────────────────────────┐
-│  CLINICAL DASHBOARD      │          │  ADVANCED CAPABILITIES   │
-│  FastAPI + WebSocket     │          │  • Federated Learning    │
-│  Real-Time UI (8081)     │          │  • Continuous Learning   │
-│                          │          │  • Multi-Outcome Pred.   │
-└──────────────────────────┘          └──────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph DataSources ["Data Sources"]
+        BM["Bedside Monitors<br/>Vitals @ 1-min"]
+        LIS["Lab Info System<br/>Labs @ variable"]
+        EMR["EMR / EHR<br/>FHIR R4 + HL7v2"]
+    end
+
+    subgraph IngestionLayer ["Ingestion Layer (Port 8000)"]
+        API_IN["FastAPI Ingest API<br/>Pydantic Validation"]
+        KAFKA["Redpanda / Kafka<br/>Event Streaming"]
+        FALLBACK["Local File Queue<br/>(Fallback)"]
+        DATALAKE["Data Lake Router<br/>Parquet Storage"]
+    end
+
+    subgraph PreprocessingPipeline ["Preprocessing Pipeline"]
+        VALID["Schema Validator"]
+        IMPUTE["Imputation Engine<br/>Forward Fill + Median"]
+        ALIGN["Time Aligner<br/>Hourly Alignment"]
+        FEAT["Feature Extractor<br/>215 Features (GPU)"]
+        WINDOW["Sliding Window<br/>Builder (12h)"]
+        LABEL["Label Generator<br/>Multi-Horizon"]
+    end
+
+    subgraph ModelTraining ["Model Training (GPU)"]
+        XGB["XGBoost Trainer<br/>GPU Histogram"]
+        LSTM["BiLSTM Trainer<br/>2-Layer, Hidden=128"]
+        TRANS["Transformer Trainer<br/>d_model=64, nhead=4"]
+        ENSEMBLE["Hybrid Ensemble<br/>Learned Stacking"]
+        CALIB["Probability Calibrator<br/>Isotonic Regression"]
+        HPO["Optuna HPO<br/>100 Trials"]
+    end
+
+    subgraph ExperimentTracking ["Experiment Tracking"]
+        MLFLOW["MLflow Server<br/>SQLite Backend"]
+    end
+
+    subgraph ExplainabilityLayer ["Explainability"]
+        SHAP["SHAP Engine<br/>Tree + Deep Explainer"]
+    end
+
+    subgraph ServingLayer ["Serving Layer (Port 8001)"]
+        API_SERVE["FastAPI Model Server<br/>Prediction API"]
+        AUTH["JWT Auth<br/>Middleware"]
+        MOBILE_API["Mobile Router<br/>Watchlist + Alerts"]
+        PUSH["FCM Push<br/>Notifications"]
+        MULTI_OUT["Multi-Outcome<br/>Router"]
+    end
+
+    subgraph MonitoringLayer ["Monitoring"]
+        PROM["Prometheus Metrics<br/>(Port 9090)"]
+        DRIFT["Drift Detector<br/>PSI + KS Test"]
+        ALERT["Alerting Engine<br/>Rule-Based"]
+    end
+
+    subgraph ClinicalDashboard ["Clinical Dashboard (Port 8081)"]
+        DASH["FastAPI + WebSocket<br/>Real-Time UI"]
+    end
+
+    subgraph MobileApp ["Mobile App"]
+        MOBILE["React Native<br/>Expo (iOS/Android/Web)"]
+    end
+
+    subgraph AdvancedCapabilities ["Advanced Capabilities"]
+        FL["Federated Learning<br/>gRPC Coordinator"]
+        CL["Continuous Learning<br/>Retrain Orchestrator"]
+        MULTI["Multi-Outcome<br/>Prediction"]
+    end
+
+    BM --> API_IN
+    LIS --> API_IN
+    EMR --> API_IN
+    API_IN --> KAFKA
+    API_IN --> FALLBACK
+    KAFKA --> DATALAKE
+    FALLBACK --> DATALAKE
+    DATALAKE --> VALID
+    VALID --> IMPUTE
+    IMPUTE --> ALIGN
+    ALIGN --> FEAT
+    FEAT --> WINDOW
+    WINDOW --> LABEL
+    LABEL --> XGB
+    LABEL --> LSTM
+    LABEL --> TRANS
+    XGB --> ENSEMBLE
+    LSTM --> ENSEMBLE
+    TRANS --> ENSEMBLE
+    ENSEMBLE --> CALIB
+    XGB --> MLFLOW
+    LSTM --> MLFLOW
+    TRANS --> MLFLOW
+    HPO --> XGB
+    HPO --> LSTM
+    HPO --> TRANS
+    XGB --> SHAP
+    CALIB --> API_SERVE
+    SHAP --> API_SERVE
+    API_SERVE --> AUTH
+    AUTH --> MOBILE_API
+    MOBILE_API --> PUSH
+    API_SERVE --> MULTI_OUT
+    API_SERVE --> PROM
+    API_SERVE --> DRIFT
+    DRIFT --> ALERT
+    ALERT --> DASH
+    PROM --> DASH
+    MOBILE_API --> MOBILE
+    PUSH --> MOBILE
+    DASH -->|WebSocket| MOBILE
+    FL --> ENSEMBLE
+    CL --> ENSEMBLE
+    MULTI --> API_SERVE
 ```
 
 ---
 
 ## 🔄 Data Pipeline Architecture
 
-```
-  ┌───────────────────────────────────────────────────────────────────────────┐
-  │                            RAW DATA                                      │
-  │  patients.csv  │  vitals_timeseries.csv  │  labs_timeseries.csv  │ MIMIC  │
-  └───────┬────────┴────────────┬────────────┴──────────┬────────────┴───────┘
-          │                     │                       │
-          ▼                     ▼                       ▼
-  ┌───────────────────────────────────────────────────────────────────────────┐
-  │  STAGE 1: INGESTION                                                      │
-  │  FastAPI Validator ──▶ Kafka Producer ──▶ Data Lake Router (Parquet)      │
-  └───────────────────────────────┬───────────────────────────────────────────┘
-                                  │
-                                  ▼
-  ┌───────────────────────────────────────────────────────────────────────────┐
-  │  STAGE 2: PREPROCESSING                                                  │
-  │  Schema Validation ──▶ Imputation ──▶ Time Alignment ──▶ Feature Eng.    │
-  │                                                          (215 features)  │
-  └───────────────────────────────┬───────────────────────────────────────────┘
-                                  │
-                                  ▼
-  ┌───────────────────────────────────────────────────────────────────────────┐
-  │  STAGE 3: WINDOWING & SPLITTING                                          │
-  │  Sliding Windows (6h, 12h) ──▶ Label Gen (12h) ──▶ Patient-Level Split   │
-  │                                                    Train 70 / Val 15 /   │
-  │                                                    Test 15               │
-  └──────────────┬────────────────────────┬──────────────────┬───────────────┘
-                 │                        │                  │
-                 ▼                        ▼                  ▼
-  ┌──────────────────────┐  ┌──────────────────┐  ┌──────────────────────┐
-  │  ML-Ready CSV (~42MB)│  │ Hourly Panel CSV │  │ Sequence Tensors     │
-  │  Tabular features    │  │ (~51 MB)         │  │ (N, W, F) for LSTM   │
-  └──────────────────────┘  └──────────────────┘  └──────────────────────┘
+```mermaid
+flowchart LR
+    subgraph RawData ["Raw Data"]
+        A["patients.csv<br/>5,000 patients"]
+        B["vitals_timeseries.csv<br/>Hourly vitals"]
+        C["labs_timeseries.csv<br/>Lab results"]
+        D["MIMIC-IV Demo<br/>Clinical database"]
+    end
+
+    subgraph Stage1 ["Stage 1: Ingestion"]
+        E["FastAPI Validator<br/>Pydantic range checks"]
+        F["Kafka Producer<br/>Topic routing"]
+        G["Data Lake Router<br/>Parquet partitioned"]
+    end
+
+    subgraph Stage2 ["Stage 2: Preprocessing"]
+        H["Schema Validation<br/>Column types"]
+        I["Forward-Fill +<br/>Median Imputation"]
+        J["Hourly Time<br/>Alignment"]
+        K["Feature Extraction<br/>215 engineered features"]
+    end
+
+    subgraph Stage3 ["Stage 3: Windowing"]
+        L["Sliding Windows<br/>(6h, 12h)"]
+        M["Label Generation<br/>12h lookahead"]
+        N["Patient-Level<br/>Train/Val/Test Split<br/>70/15/15"]
+    end
+
+    subgraph Stage4 ["Stage 4: Output"]
+        O["ML-Ready CSV<br/>~42 MB"]
+        P["Hourly Panel CSV<br/>~51 MB"]
+        Q["Sequence Tensors<br/>(N, W, F)"]
+    end
+
+    A --> E
+    B --> E
+    C --> E
+    D --> E
+    E --> F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    J --> K
+    K --> L
+    L --> M
+    M --> N
+    N --> O
+    N --> P
+    N --> Q
 ```
 
 ### Engineered Features (215 total)
@@ -606,27 +662,24 @@ All incoming data is validated against clinical ranges using Pydantic:
 
 ### Streaming Architecture
 
-```
-  Bedside Monitor          Ingest API            Redpanda             Data Lake
-       │                      │                     │                     │
-       │  POST /ingest/vitals │                     │                     │
-       │─────────────────────▶│                     │                     │
-       │                      │                     │                     │
-       │                      │ Pydantic validation │                     │
-       │                      │─ ─ ─ ─ ─ ─ ─ ─ ─ ─│                     │
-       │                      │                     │                     │
-       │                      │  IF Kafka Connected: │                     │
-       │                      │ ───publish──────────▶│                     │
-       │                      │                     │ ───write parquet───▶│
-       │                      │                     │                     │
-       │                      │  IF Kafka Down:      │                     │
-       │                      │ ───write to local────▶ Local File Queue    │
-       │                      │    (auto-replayed     │ when broker        │
-       │                      │     reconnects)       │ reconnects)        │
-       │                      │                     │                     │
-       │  200 OK (trace_id)   │                     │                     │
-       │◀─────────────────────│                     │                     │
-       │                      │                     │                     │
+```mermaid
+sequenceDiagram
+    participant Monitor as Bedside Monitor
+    participant API as Ingest API
+    participant Kafka as Redpanda
+    participant Lake as Data Lake
+    participant Fallback as Local Queue
+
+    Monitor->>API: POST /ingest/vitals
+    API->>API: Pydantic validation
+    alt Kafka Connected
+        API->>Kafka: Publish to icu-vitals topic
+        Kafka->>Lake: Consumer writes Parquet
+    else Kafka Down
+        API->>Fallback: Write to local file queue
+        Note over Fallback: Auto-replayed when broker reconnects
+    end
+    API-->>Monitor: 200 OK (trace_id)
 ```
 
 ---
@@ -637,40 +690,15 @@ The preprocessing pipeline transforms raw clinical data into ML-ready feature ma
 
 ### Pipeline Stages
 
-```
-Raw CSV Data
-    │
-    ▼
-┌─────────────────┐
-│ Schema Validator │  Validates column types, detects missing columns
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Imputation      │  Forward-fill + group-median for missing values
-│ Engine          │  Per-patient temporal imputation
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Time Aligner    │  Aligns irregular samples to hourly grid
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Feature         │  Extracts 215 statistical features from sliding
-│ Extractor (GPU) │  windows: mean, std, slope, delta, RoC, etc.
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Label Generator │  Creates binary labels: "will deteriorate in
-│ (Multi-Horizon) │  next 6/10/12 hours?"
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Patient-Level   │  Ensures no data leakage: same patient
-│ Train/Val/Test  │  never appears in multiple splits
-│ Split (70/15/15)│  Stratified by deterioration rate
-└────────┬────────┘
-         ▼
-    ML-Ready Data
+```mermaid
+flowchart TD
+    RAW["Raw CSV Data"] --> VAL["Schema Validator<br/>Validates types & detects missing columns"]
+    VAL --> IMP["Imputation Engine<br/>Forward-fill + median per patient"]
+    IMP --> ALIGN["Time Aligner<br/>Hourly grid resampling"]
+    ALIGN --> FEAT["Feature Extractor (GPU)<br/>215 statistical & temporal features"]
+    FEAT --> LBL["Label Generator<br/>Multi-horizon lookahead (6h, 10h, 12h)"]
+    LBL --> SPLIT["Patient-Level Split (70/15/15)<br/>Stratified by patient to prevent data leakage"]
+    SPLIT --> OUT["ML-Ready Datasets<br/>Tabular + Sequence Tensors"]
 ```
 
 ### GPU Acceleration
@@ -1008,41 +1036,42 @@ Privacy-preserving multi-site model training without sharing patient data.
 
 ### Architecture
 
-```
-                    ┌─────────────────────────────────────────┐
-                    │       COORDINATOR (Central Server)       │
-                    │                                         │
-                    │  FL Coordinator (gRPC :50051)            │
-                    │  Aggregator (FedAvg / FedProx / FedBN)  │
-                    │  Privacy Accountant (Rényi DP, ε=8.0)   │
-                    │  Secure Aggregation (Secret Sharing)     │
-                    └────┬──────────────┬──────────────┬──────┘
-                         │              │              │
-           1. Broadcast  │              │              │  1. Broadcast
-           Global Model  │              │              │  Global Model
-                         ▼              ▼              ▼
-  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
-  │   HOSPITAL A     │  │   HOSPITAL B     │  │   HOSPITAL C     │
-  │                  │  │                  │  │                  │
-  │  Participant A   │  │  Participant B   │  │  Participant C   │
-  │  Local Training  │  │  Local Training  │  │  Local Training  │
-  │                  │  │                  │  │                  │
-  │  ┌────────────┐  │  │  ┌────────────┐  │  │  ┌────────────┐  │
-  │  │ Local Data │  │  │  │ Local Data │  │  │  │ Local Data │  │
-  │  │ (NEVER     │  │  │  │ (NEVER     │  │  │  │ (NEVER     │  │
-  │  │  leaves)   │  │  │  │  leaves)   │  │  │  │  leaves)   │  │
-  │  └────────────┘  │  │  └────────────┘  │  │  └────────────┘  │
-  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘
-           │                     │                     │
-           │  2. Send Encrypted  │  2. Send Encrypted  │
-           │     Gradients       │     Gradients        │
-           └─────────────────────┼─────────────────────┘
-                                 │
-                                 ▼
-                    ┌─────────────────────────────────┐
-                    │  3. Aggregate → Update Global   │
-                    │     Model → Next Round          │
-                    └─────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph CentralCoordinator ["Coordinator (Central Server)"]
+        C["FL Coordinator<br/>gRPC :50051"]
+        AGG["Aggregator<br/>FedAvg / FedProx / FedBN"]
+        PRIV["Privacy Accountant<br/>Renyi DP (eps=8.0)"]
+        SEC["Secure Aggregation<br/>Secret Sharing"]
+    end
+
+    subgraph HospitalA ["Hospital A"]
+        PA["Participant A<br/>Local Training"]
+        DA["Local Data A<br/>Never Leaves Site"]
+    end
+
+    subgraph HospitalB ["Hospital B"]
+        PB["Participant B<br/>Local Training"]
+        DB["Local Data B<br/>Never Leaves Site"]
+    end
+
+    subgraph HospitalC ["Hospital C"]
+        PC["Participant C<br/>Local Training"]
+        DC["Local Data C<br/>Never Leaves Site"]
+    end
+
+    C -->|"1. Broadcast Global Model"| PA
+    C -->|"1. Broadcast Global Model"| PB
+    C -->|"1. Broadcast Global Model"| PC
+    DA --> PA
+    DB --> PB
+    DC --> PC
+    PA -->|"2. Send Encrypted Gradients"| SEC
+    PB -->|"2. Send Encrypted Gradients"| SEC
+    PC -->|"2. Send Encrypted Gradients"| SEC
+    SEC --> AGG
+    AGG --> PRIV
+    PRIV -->|"3. Updated Global Model"| C
 ```
 
 ### Privacy Guarantees
@@ -1085,51 +1114,23 @@ Drift-triggered automatic retraining with clinical safety gates.
 
 ### Lifecycle
 
-```
-  ┌──────────────┐
-  │  MONITORING   │◀─────────────────────────────────────────────────────────┐
-  │  (Running)    │                                                          │
-  └──────┬───────┘                                                          │
-         │ PSI > 0.2 or KS p < 0.05                                         │
-         ▼                                                                  │
-  ┌──────────────┐                                                          │
-  │  DRIFT        │                                                          │
-  │  DETECTED     │                                                          │
-  └──────┬───────┘                                                          │
-         │ Check data accumulator                                           │
-         ▼                                                                  │
-  ┌──────────────┐  Insufficient data   ┌──────────────┐                    │
-  │  BUFFER       │────────────────────▶│  SKIP         │────────────────────┘
-  │  CHECK        │                     │  (Keep model) │
-  └──────┬───────┘                     └──────────────┘
-         │ Buffer ≥ 5,000 samples                   ▲
-         ▼                                          │
-  ┌──────────────┐                                  │
-  │  RETRAINING   │  Train new "Challenger"          │
-  └──────┬───────┘                                  │
-         ▼                                          │
-  ┌──────────────┐                                  │
-  │  SHADOW EVAL  │  24h shadow evaluation           │
-  └──────┬───────┘                                  │
-         ▼                                          │
-  ┌──────────────┐  Not better ─────────────────────┘
-  │  COMPARISON   │
-  └──────┬───────┘
-         │ AUROC improved ≥ 0.5%
-         ▼
-  ┌──────────────┐  auto_promote=True  ┌──────────────┐
-  │  PROMOTION    │───────────────────▶│  AUTO DEPLOY  │──────────┐
-  └──────┬───────┘                     └──────────────┘          │
-         │ auto_promote=False                                    │
-         ▼                                                       ▼
-  ┌──────────────┐  Clinician approves  ┌──────────────┐  ┌──────────┐
-  │  HUMAN        │───────────────────▶│  DEPLOYED      │  │ DEPLOYED │
-  │  APPROVAL     │                     │  (New champ.)  │  │          │
-  └──────────────┘                     └───────┬──────┘  └─────┬────┘
-                                                │              │
-                                                └──────────────┘
-                                                       │
-                                              Back to MONITORING
+```mermaid
+flowchart TD
+    START(["Start / System Running"]) --> MON["Monitoring: PSI & KS Drift Checks"]
+    MON --> CHECK{"Drift Detected?<br/>PSI > 0.2 or KS p < 0.05"}
+    CHECK -->|No| MON
+    CHECK -->|Yes| BUF{"Buffer Check<br/>Samples >= 5000?"}
+    BUF -->|No: Insufficient Data| MON
+    BUF -->|Yes| RETRAIN["Retraining Pipeline<br/>Train Challenger Model"]
+    RETRAIN --> SHADOW["24h Shadow Evaluation<br/>Run alongside Champion"]
+    SHADOW --> EVAL{"AUROC Improved >= 0.5%?"}
+    EVAL -->|No: Discard| MON
+    EVAL -->|Yes: Promotion Gate| GATE{"auto_promote == True?"}
+    GATE -->|Yes| DEPLOY["Deploy New Champion Model"]
+    GATE -->|No: Clinical Review| APPROV{"Clinician Approval?"}
+    APPROV -->|Approved| DEPLOY
+    APPROV -->|Rejected| MON
+    DEPLOY --> MON
 ```
 
 ### Components
@@ -1163,21 +1164,13 @@ Extends the binary deterioration model to simultaneously predict multiple clinic
 
 ### Architecture
 
-```
-Input Features (215)
-        │
-        ▼
-┌───────────────────┐
-│  Shared Trunk     │  Transformer encoder (d=64, h=4, L=2)
-│  (Feature Fusion) │
-└───────┬───────────┘
-        │
-    ┌───┼───┬───┐
-    ▼   ▼   ▼   ▼
-┌─────┐┌─────┐┌─────┐┌─────┐
-│Head1││Head2││Head3││Head4│  Task-specific classification heads
-│Deter││Sepsi││Cardi││Respi│  (Linear → ReLU → Dropout → Sigmoid)
-└─────┘└─────┘└─────┘└─────┘
+```mermaid
+flowchart TD
+    IN["Input Features (215 Clinical Signals)"] --> TRUNK["Shared Trunk Encoder<br/>Transformer Layers (d=64, nhead=4, L=2)"]
+    TRUNK --> H1["Head 1: General Deterioration<br/>Linear -> ReLU -> Sigmoid (12h)"]
+    TRUNK --> H2["Head 2: Sepsis Risk<br/>Linear -> ReLU -> Sigmoid (6h)"]
+    TRUNK --> H3["Head 3: Cardiac Arrest<br/>Linear -> ReLU -> Sigmoid (12h)"]
+    TRUNK --> H4["Head 4: Respiratory Failure<br/>Linear -> ReLU -> Sigmoid (12h)"]
 ```
 
 ### Multi-Task Loss
@@ -1322,35 +1315,19 @@ The serving container uses NVIDIA GPU passthrough:
 
 Triggers on push to `main`/`develop` and PRs to `main`:
 
-```
-  Push / PR
-      │
-      ▼
-  ┌──────────────┐   ┌────────────────┐   ┌──────────────────┐
-  │  Checkout     │──▶│ Setup Python   │──▶│ Install Deps     │
-  │              │   │ 3.11 + 3.12    │   │                  │
-  └──────────────┘   └────────────────┘   └────────┬─────────┘
-                                                    │
-      ┌─────────────────────────────────────────────┘
-      ▼
-  ┌──────────────┐   ┌────────────────┐   ┌──────────────────┐
-  │  Ruff Lint   │──▶│ Import Check   │──▶│ Pytest + Coverage│
-  │  src/ config/│   │ All modules    │   │                  │
-  └──────────────┘   └────────────────┘   └────────┬─────────┘
-                                                    │
-      ┌─────────────────────────────────────────────┘
-      ▼
-  ┌──────────────┐   ┌────────────────┐   ┌──────────────────┐
-  │  Generate    │──▶│ Validate       │──▶│ Generate         │
-  │  SBOM        │   │ Model Card     │   │ Traceability     │
-  └──────────────┘   └────────────────┘   └────────┬─────────┘
-                                                    │
-      ┌─────────────────────────────────────────────┘
-      ▼
-  ┌──────────────┐   ┌────────────────┐
-  │  Backwards   │──▶│ Upload         │
-  │  Compat Check│   │ Artifacts      │
-  └──────────────┘   └────────────────┘
+```mermaid
+flowchart LR
+    A["Push / PR"] --> B["Checkout"]
+    B --> C["Setup Python<br/>3.11 + 3.12 matrix"]
+    C --> D["Install Dependencies"]
+    D --> E["Ruff Lint<br/>src/ config/"]
+    E --> F["Import Validation<br/>All core modules"]
+    F --> G["Pytest Suite<br/>+ Coverage"]
+    G --> H["Generate SBOM<br/>CycloneDX"]
+    H --> I["Validate Model Card"]
+    I --> J["Generate<br/>Traceability Matrix"]
+    J --> K["Backwards<br/>Compatibility Check"]
+    K --> L["Upload Artifacts<br/>Coverage + Compliance"]
 ```
 
 ### Continuous Deployment (`.github/workflows/cd.yml`)
