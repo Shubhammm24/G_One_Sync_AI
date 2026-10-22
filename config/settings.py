@@ -153,6 +153,7 @@ class ServingSettings(BaseSettings):
     serving_host: str = "0.0.0.0"
     serving_port: int = 8001
     model_cache_ttl: int = 3600  # seconds
+    cors_origins: list[str] = Field(default=["*"])
 
     model_config = ConfigDict(env_prefix="JEEVAN_SERVING_")
 

@@ -32,6 +32,11 @@
         "USE_FINGERPRINT"
       ]
     },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single"
+    },
     "plugins": [
       [
         "expo-local-authentication",

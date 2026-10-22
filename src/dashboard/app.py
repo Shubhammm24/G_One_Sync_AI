@@ -25,6 +25,7 @@ from typing import Optional
 
 import numpy as np
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
@@ -40,6 +41,15 @@ STATIC_DIR = Path(__file__).parent / "static"
 app = FastAPI(
     title="G_One_Sync AI – Clinical Dashboard",
     version="1.0.0",
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Mount static files

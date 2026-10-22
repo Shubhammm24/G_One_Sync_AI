@@ -1,17 +1,23 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-// Dynamically extract host IP from Expo packager (works automatically for physical phones on Wi-Fi)
-const bundlerHost = Constants.expoConfig?.hostUri?.split(':')[0];
-const isInvalidHost =
-  !bundlerHost ||
-  bundlerHost.includes('ngrok') ||
-  bundlerHost.includes('expo') ||
-  bundlerHost.startsWith('169.254');
+const getHost = (): string => {
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location?.hostname) {
+    return window.location.hostname;
+  }
+  const bundlerHost = Constants.expoConfig?.hostUri?.split(':')[0];
+  const isInvalidHost =
+    !bundlerHost ||
+    bundlerHost.includes('ngrok') ||
+    bundlerHost.includes('expo') ||
+    bundlerHost.startsWith('169.254');
 
-const DEFAULT_HOST = isInvalidHost
-  ? (Platform.OS === 'android' && !Constants.isDevice ? '10.0.2.2' : '192.168.29.138')
-  : bundlerHost;
+  return isInvalidHost
+    ? (Platform.OS === 'android' && !Constants.isDevice ? '10.0.2.2' : '192.168.29.138')
+    : bundlerHost;
+};
+
+const DEFAULT_HOST = getHost();
 
 export const API_BASE_URL = `http://${DEFAULT_HOST}:8001`;
 export const WS_BASE_URL = `ws://${DEFAULT_HOST}:8002/ws/live`;

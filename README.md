@@ -1,408 +1,282 @@
 <p align="center">
-  <h1 align="center">🏥 G_One_Sync AI</h1>
-  <p align="center">
-    <strong>AI-Powered Early Clinical Deterioration Prediction System for ICU Patients</strong>
-  </p>
-  <p align="center">
-    <em>Real-time multi-model ensemble framework with deep explainability, temporal attention analysis, and clinical decision support — built on ICU time-series data.</em>
-  </p>
-  <p align="center">
-    <img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python">
-    <img src="https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white" alt="PyTorch">
-    <img src="https://img.shields.io/badge/XGBoost-2.1+-006600?logo=xgboost" alt="XGBoost">
-    <img src="https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white" alt="FastAPI">
-    <img src="https://img.shields.io/badge/MLflow-2.14+-0194E2?logo=mlflow&logoColor=white" alt="MLflow">
-    <img src="https://img.shields.io/badge/SHAP-Explainable_AI-FF6F00" alt="SHAP">
-    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
-  </p>
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.111+-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/XGBoost-2.1+-FF6F00?style=for-the-badge&logo=xgboost&logoColor=white" alt="XGBoost"/>
+  <img src="https://img.shields.io/badge/MLflow-2.14+-0194E2?style=for-the-badge&logo=mlflow&logoColor=white" alt="MLflow"/>
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/CUDA-12.4-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="CUDA 12.4"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License"/>
+</p>
+
+<h1 align="center">🫀 G_One_Sync AI (JeevanSync)</h1>
+
+<p align="center">
+  <strong>AI-Powered Early Clinical Deterioration Prediction System for ICU Patients</strong>
+</p>
+
+<p align="center">
+  <em>A production-grade, GPU-accelerated clinical ML platform that predicts patient deterioration<br/>
+  up to 12 hours before clinical onset — enabling proactive critical care interventions.</em>
 </p>
 
 ---
 
 ## 📋 Table of Contents
 
-- [Abstract](#-abstract)
-- [Clinical Motivation](#-clinical-motivation)
-- [Architecture Overview](#-architecture-overview)
-- [Model Pipeline](#-model-pipeline)
-  - [Data Ingestion & Preprocessing](#1-data-ingestion--preprocessing)
-  - [Feature Engineering](#2-feature-engineering)
-  - [Model Training](#3-model-training)
-  - [Ensemble Strategy](#4-ensemble-strategy)
-  - [Calibration & Threshold Optimization](#5-calibration--threshold-optimization)
-  - [Explainability (SHAP)](#6-explainability-shap)
-- [Performance Benchmarks](#-performance-benchmarks)
-- [Real-Time Clinical Dashboard](#-real-time-clinical-dashboard)
-- [Monitoring & Alerting](#-monitoring--alerting)
-- [Why G_One_Sync AI Is Different](#-why-g_one_sync-ai-is-different)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [System Architecture](#-system-architecture)
+- [Data Pipeline Architecture](#-data-pipeline-architecture)
 - [Project Structure](#-project-structure)
+- [Technology Stack](#-technology-stack)
 - [Getting Started](#-getting-started)
+- [Data Ingestion](#-data-ingestion)
+- [Preprocessing Pipeline](#-preprocessing-pipeline)
+- [Model Training](#-model-training)
+- [Model Performance](#-model-performance)
+- [Probability Calibration](#-probability-calibration)
+- [SHAP Explainability](#-shap-explainability)
+- [Serving API](#-serving-api)
+- [Clinical Dashboard](#-clinical-dashboard)
+- [Mobile Companion App](#-mobile-companion-app)
+- [EMR/EHR Integration](#-emrehr-integration)
+- [Federated Learning](#-federated-learning)
+- [Continuous Learning](#-continuous-learning)
+- [Multi-Outcome Prediction](#-multi-outcome-prediction)
+- [Monitoring & Alerting](#-monitoring--alerting)
+- [Regulatory Compliance](#-regulatory-compliance)
 - [Docker Deployment](#-docker-deployment)
-- [Configuration](#-configuration)
-- [Testing](#-testing)
 - [CI/CD Pipeline](#-cicd-pipeline)
-- [API Reference](#-api-reference)
-- [Roadmap](#-roadmap)
+- [Configuration System](#-configuration-system)
+- [Testing](#-testing)
 - [Contributing](#-contributing)
 - [License](#-license)
-- [Citation](#-citation)
 
 ---
 
-## 📄 Abstract
+## 🌟 Overview
 
-**G_One_Sync AI** is a production-grade clinical early warning system that predicts patient deterioration in Intensive Care Unit (ICU) settings **12 hours before onset**. It leverages a multi-model ensemble combining gradient-boosted trees (XGBoost), bidirectional LSTMs, and Transformer encoders to analyze high-frequency vital signs, laboratory results, and clinical context in real time.
+**G_One_Sync AI** (internally codename *JeevanSync* — "life sync" in Hindi) is a comprehensive clinical decision support system designed to predict patient deterioration in Intensive Care Unit (ICU) settings. The system ingests real-time physiological data streams — vital signs, laboratory results, and clinical observations — and produces calibrated risk scores with full SHAP-based explanations for every prediction.
 
-The system achieves an **Ensemble AUROC of 0.9579** and **AUPRC of 0.7018** on held-out test data — significantly outperforming traditional early warning scores (NEWS, MEWS, qSOFA) that rely on static thresholds. Unlike black-box approaches, G_One_Sync AI provides **per-patient SHAP waterfall explanations**, **temporal attention heatmaps**, and **counterfactual what-if analysis**, enabling clinicians to understand *why* the model is alarming and *what* interventions could change the trajectory.
+### The Clinical Problem
 
-**Key Contributions:**
-- **Multi-Architecture Ensemble**: Combines XGBoost (tabular), BiLSTM (sequential), and Transformer (attention-based) into a single learned-weight ensemble
-- **Isotonic Calibration**: Achieves near-perfect probability calibration (ECE → 10⁻⁹) essential for clinical decision-making
-- **End-to-End MLOps**: Full pipeline from MIMIC-IV ingestion → feature engineering → training → serving → monitoring → drift detection
-- **Interactive Clinical Dashboard**: Real-time WebSocket-powered interface with live waveforms, SHAP explanations, and intervention protocols
-
----
-
-## 🏥 Clinical Motivation
-
-> **"Failure to rescue"** — the inability to recognize and respond to patient deterioration in time — accounts for up to **150,000 preventable deaths annually** in U.S. hospitals (Agency for Healthcare Research and Quality).
-
-### The Problem
-
-Traditional early warning scores (NEWS, MEWS, qSOFA) suffer from critical limitations:
-
-| Limitation | Impact |
-|---|---|
-| **Static thresholds** | Same cutoffs for all patients regardless of baseline physiology |
-| **Single-timepoint assessment** | No consideration of temporal trends or rate of change |
-| **Poor sensitivity** | MEWS detects only 30-40% of deterioration events (Subbe et al., 2001) |
-| **No explainability** | Provides a score but no actionable insight into *which* parameters are driving risk |
-| **Alert fatigue** | Up to 95% false positive rate with threshold-based systems |
+In ICU settings, **clinical deterioration is often recognized too late**. Traditional early warning scores (MEWS, NEWS2) rely on static threshold rules and miss subtle physiological trends that precede adverse events. Studies show that up to **40% of ICU cardiac arrests** have documented preceding warning signs that were missed or acted upon too slowly.
 
 ### Our Solution
 
-G_One_Sync AI addresses each limitation:
+G_One_Sync AI addresses this by:
 
-- **Personalized risk curves** using patient-specific sliding windows and trend analysis
-- **Temporal modeling** with BiLSTM and Transformer architectures that capture 12-hour deterioration trajectories
-- **High sensitivity (62.9%) with high specificity (98.9%)** at the clinical operating point, dramatically reducing false alarms
-- **Full explainability** — every prediction comes with SHAP-attributed feature contributions and temporal attention weights
-- **Clinical protocols** — automatic linkage to evidence-based intervention checklists (Sepsis Bundle, Respiratory Protocol, Cardiac Protocol)
-
----
-
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          G_One_Sync AI — System Architecture                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  ┌──────────────┐     ┌──────────────┐     ┌──────────────────────────┐     │
-│  │  MIMIC-IV /   │────▶│   Redpanda   │────▶│   Ingestion Service     │     │
-│  │  Live EMR     │     │   (Kafka)    │     │   (FastAPI + Schemas)   │     │
-│  └──────────────┘     └──────────────┘     └──────────┬───────────────┘     │
-│                                                        │                     │
-│                                                        ▼                     │
-│                                             ┌──────────────────────┐         │
-│                                             │  Preprocessing       │         │
-│                                             │  • Deduplication     │         │
-│                                             │  • Outlier Clamping  │         │
-│                                             │  • Missing Imputation│         │
-│                                             │  • Sliding Windows   │         │
-│                                             └──────────┬───────────┘         │
-│                                                        │                     │
-│                                                        ▼                     │
-│                                             ┌──────────────────────┐         │
-│                                             │  Feature Engineering │         │
-│                                             │  • 60+ temporal feats│         │
-│                                             │  • Shock Index/qSOFA │         │
-│                                             │  • Rate of Change    │         │
-│                                             │  • Acceleration      │         │
-│                                             └──────────┬───────────┘         │
-│                                                        │                     │
-│                              ┌──────────────────────────┼──────────────┐     │
-│                              │                          │              │     │
-│                              ▼                          ▼              ▼     │
-│                     ┌──────────────┐         ┌────────────┐   ┌──────────┐   │
-│                     │   XGBoost    │         │   BiLSTM   │   │Transformer│  │
-│                     │  (Tabular)   │         │ (Sequential)│   │(Attention)│  │
-│                     └──────┬───────┘         └─────┬──────┘   └─────┬────┘   │
-│                            │                       │                │        │
-│                            └───────┬───────────────┼────────────────┘        │
-│                                    ▼               ▼                         │
-│                           ┌──────────────────────────────────┐               │
-│                           │  Learned-Weight Ensemble         │               │
-│                           │  + Isotonic Calibration          │               │
-│                           │  → Threshold Optimization        │               │
-│                           └──────────┬───────────────────────┘               │
-│                                      │                                       │
-│                        ┌─────────────┼─────────────────┐                     │
-│                        ▼             ▼                 ▼                     │
-│               ┌──────────────┐ ┌──────────┐  ┌────────────────┐             │
-│               │ SHAP Engine  │ │ MLflow   │  │ Serving API    │             │
-│               │ (Local+Global│ │ Tracking │  │ (FastAPI:8001) │             │
-│               │  Waterfall)  │ │          │  │                │             │
-│               └──────────────┘ └──────────┘  └───────┬────────┘             │
-│                                                      │                       │
-│                                                      ▼                       │
-│                                           ┌──────────────────────┐           │
-│                                           │  Clinical Dashboard  │           │
-│                                           │  (WebSocket Live)    │           │
-│                                           │  • Patient Grid      │           │
-│                                           │  • Risk Trajectory   │           │
-│                                           │  • SHAP Waterfall    │           │
-│                                           │  • Live ECG/PPG      │           │
-│                                           │  • Attention Heatmap │           │
-│                                           │  • What-If Sliders   │           │
-│                                           │  • Protocol Engine   │           │
-│                                           │  • Audio Alarm       │           │
-│                                           └──────────────────────┘           │
-│                                                                              │
-│  ┌───────────────────────────────────────────┐                               │
-│  │  Monitoring Layer                         │                               │
-│  │  • Prometheus Metrics Collector           │                               │
-│  │  • PSI / KL Drift Detection              │                               │
-│  │  • Rule-Based Alerting Engine             │                               │
-│  │  • System Health (Kafka/GPU/Latency)      │                               │
-│  └───────────────────────────────────────────┘                               │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+1. **Continuous monitoring** — Ingesting vitals and labs at sub-hourly frequency
+2. **Temporal pattern recognition** — Using sliding windows and deep learning to capture trends
+3. **Multi-model ensemble** — Combining XGBoost, BiLSTM, and Transformer architectures
+4. **Calibrated probabilities** — Ensuring predicted risk percentages are clinically meaningful
+5. **Explainable predictions** — SHAP waterfall explanations for every patient, every prediction
+6. **Proactive alerting** — Push notifications to attending physicians before deterioration occurs
 
 ---
 
-## 🧠 Model Pipeline
+## ✨ Key Features
 
-### 1. Data Ingestion & Preprocessing
+| Category | Feature | Description |
+|----------|---------|-------------|
+| 🧠 **ML Models** | 3-Model Ensemble | XGBoost + BiLSTM + Transformer with learned stacking weights |
+| 🎯 **Prediction** | 12-Hour Horizon | Predicts deterioration up to 12 hours before clinical onset |
+| 📊 **Calibration** | Isotonic Regression | ECE → 10⁻⁹ ensuring clinical-grade probability estimates |
+| 🔍 **Explainability** | SHAP Waterfall | Per-patient feature importance explanations (TreeExplainer + DeepExplainer) |
+| 📡 **Streaming** | Kafka/Redpanda | Real-time data ingestion with local file queue fallback |
+| 🏥 **EMR Integration** | FHIR R4 + HL7v2 | Native integration with hospital EHR systems |
+| 🌐 **Federated Learning** | Multi-Site Training | Privacy-preserving training across hospitals with differential privacy |
+| 🔄 **Continuous Learning** | Drift-Triggered Retraining | Automatic retraining with champion/challenger promotion |
+| 📱 **Mobile App** | React Native (Expo) | Companion app for physicians with push notifications |
+| 🖥️ **Dashboard** | Real-Time WebSocket | Clinical monitoring dashboard with live risk tracking |
+| 🔒 **Security** | JWT + HIPAA-ready | Role-based access, audit trails, encrypted communications |
+| ⚖️ **Compliance** | FDA 510(k) Ready | Full IEC 62304, ISO 14971, QMS documentation |
+| 🐳 **Deployment** | GPU Docker Stack | NVIDIA CUDA containers with health checks |
+| 📈 **Monitoring** | Prometheus + Drift | Performance metrics, data drift detection, clinical alerting |
 
-**Data Source:** MIMIC-IV Clinical Database (or compatible EMR feeds via Kafka/Redpanda)
+---
 
-| Stage | Operation | Details |
-|---|---|---|
-| **Ingestion** | Kafka-compatible streaming | FastAPI endpoint with Pydantic schema validation; supports batch CSV and real-time streaming via Redpanda |
-| **Deduplication** | Time-window merge | Groups observations within configurable time windows to prevent duplicate entries |
-| **Outlier Clamping** | Physiological bounds | Clamps vital signs to clinically plausible ranges (e.g., HR: 20–300 bpm, SpO₂: 50–100%) |
-| **Imputation** | Forward-fill + median | Forward-fills within patient timelines; uses population median for initial missing values |
-| **Labeling** | Deterioration flag | Binary label: `deterioration_next_12h` — 1 if patient deteriorates within the next 12-hour prediction horizon |
+## 🏗 System Architecture
 
-### 2. Feature Engineering
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        BM[("🏥 Bedside Monitors<br/>Vitals @ 1-min")]
+        LIS[("🧪 Lab Info System<br/>Labs @ variable")]
+        EMR[("📋 EMR / EHR<br/>FHIR R4 + HL7v2")]
+    end
 
-We extract **60+ engineered features** from raw time-series data:
+    subgraph "Ingestion Layer (Port 8000)"
+        API_IN["FastAPI Ingest API<br/>Pydantic Validation"]
+        KAFKA["Redpanda / Kafka<br/>Event Streaming"]
+        FALLBACK["Local File Queue<br/>(Fallback)"]
+        DATALAKE["Data Lake Router<br/>Parquet Storage"]
+    end
 
-| Feature Category | Examples | Clinical Rationale |
-|---|---|---|
-| **Latest Values** | `heart_rate_latest`, `lactate_latest` | Current physiological state |
-| **Statistical Aggregates** | `_mean`, `_std`, `_min`, `_max` (6h/12h windows) | Variability often precedes instability |
-| **Temporal Deltas** | `lactate_delta`, `creatinine_delta` | Rate of change captures acute trends |
-| **Rate of Change (RoC)** | `lactate_roc`, `heart_rate_roc` | First derivative of clinical trajectory |
-| **Acceleration** | `creatinine_accel`, `crp_level_accel` | Second derivative detects escalating deterioration |
-| **Composite Scores** | `shock_index`, `qsofa_score` | Clinically validated severity indicators |
-| **Interaction Features** | `shock_index × lactate`, `HR × RR` | Cross-system physiological coupling |
+    subgraph "Preprocessing Pipeline"
+        VALID["Schema Validator"]
+        IMPUTE["Imputation Engine<br/>Forward Fill + Median"]
+        ALIGN["Time Aligner<br/>Hourly Alignment"]
+        FEAT["Feature Extractor<br/>215 Features (GPU)"]
+        WINDOW["Sliding Window<br/>Builder (12h)"]
+        LABEL["Label Generator<br/>Multi-Horizon"]
+    end
 
-### 3. Model Training
+    subgraph "Model Training (GPU)"
+        XGB["XGBoost Trainer<br/>GPU Histogram"]
+        LSTM["BiLSTM Trainer<br/>2-Layer, Hidden=128"]
+        TRANS["Transformer Trainer<br/>d_model=64, nhead=4"]
+        ENSEMBLE["Hybrid Ensemble<br/>Learned Stacking"]
+        CALIB["Probability Calibrator<br/>Isotonic Regression"]
+        HPO["Optuna HPO<br/>100 Trials"]
+    end
 
-#### XGBoost (Gradient Boosted Trees)
-- **Strength**: Excels at tabular feature interactions without requiring temporal encoding
-- **Config**: 500 estimators, max_depth=8, learning_rate=0.05, `scale_pos_weight` for class imbalance
-- **Hyperparameter Search**: Optuna with 100 trials for Bayesian optimization
-- **Test AUROC**: **0.9552**
+    subgraph "Experiment Tracking"
+        MLFLOW["MLflow Server<br/>SQLite Backend"]
+    end
 
-#### Bidirectional LSTM
-- **Strength**: Captures sequential dependencies in vital sign trajectories
-- **Architecture**: 2-layer BiLSTM, hidden_size=128, dropout=0.3, with attention pooling
-- **Training**: AdamW optimizer, OneCycleLR scheduler, focal loss for hard-example mining
-- **GPU**: CUDA-accelerated (RTX 3050 4GB)
-- **Test AUROC**: **0.9520**
+    subgraph "Explainability"
+        SHAP["SHAP Engine<br/>Tree + Deep Explainer"]
+    end
 
-#### Transformer Encoder
-- **Strength**: Multi-head self-attention discovers long-range temporal dependencies
-- **Architecture**: d_model=64, 4 attention heads, 2 encoder layers, positional encoding
-- **Training**: Same optimizer/scheduler/loss as BiLSTM for fair comparison
-- **Test AUROC**: **0.9492**
+    subgraph "Serving Layer (Port 8001)"
+        API_SERVE["FastAPI Model Server<br/>Prediction API"]
+        AUTH["JWT Auth<br/>Middleware"]
+        MOBILE_API["Mobile Router<br/>Watchlist + Alerts"]
+        PUSH["FCM Push<br/>Notifications"]
+        MULTI_OUT["Multi-Outcome<br/>Router"]
+    end
 
-### 4. Ensemble Strategy
+    subgraph "Monitoring"
+        PROM["Prometheus Metrics<br/>(Port 9090)"]
+        DRIFT["Drift Detector<br/>PSI + KS Test"]
+        ALERT["Alerting Engine<br/>Rule-Based"]
+    end
 
-We use a **learned-weight ensemble** rather than simple averaging:
+    subgraph "Clinical Dashboard (Port 8081)"
+        DASH["FastAPI + WebSocket<br/>Real-Time UI"]
+    end
 
-```
-P_ensemble = w₁·P_xgboost + w₂·P_bilstm + w₃·P_transformer
+    subgraph "Mobile App"
+        MOBILE["React Native<br/>Expo (iOS/Android/Web)"]
+    end
+
+    subgraph "Advanced Capabilities"
+        FL["Federated Learning<br/>gRPC Coordinator"]
+        CL["Continuous Learning<br/>Retrain Orchestrator"]
+        MULTI["Multi-Outcome<br/>Prediction"]
+    end
+
+    BM --> API_IN
+    LIS --> API_IN
+    EMR --> API_IN
+    API_IN --> KAFKA
+    API_IN --> FALLBACK
+    KAFKA --> DATALAKE
+    FALLBACK --> DATALAKE
+    DATALAKE --> VALID
+    VALID --> IMPUTE
+    IMPUTE --> ALIGN
+    ALIGN --> FEAT
+    FEAT --> WINDOW
+    WINDOW --> LABEL
+    LABEL --> XGB & LSTM & TRANS
+    XGB --> ENSEMBLE
+    LSTM --> ENSEMBLE
+    TRANS --> ENSEMBLE
+    ENSEMBLE --> CALIB
+    XGB & LSTM & TRANS --> MLFLOW
+    HPO --> XGB & LSTM & TRANS
+    XGB --> SHAP
+    CALIB --> API_SERVE
+    SHAP --> API_SERVE
+    API_SERVE --> AUTH
+    AUTH --> MOBILE_API
+    MOBILE_API --> PUSH
+    API_SERVE --> MULTI_OUT
+    API_SERVE --> PROM
+    API_SERVE --> DRIFT
+    DRIFT --> ALERT
+    ALERT --> DASH
+    PROM --> DASH
+    MOBILE_API --> MOBILE
+    PUSH --> MOBILE
+    DASH --> |WebSocket| MOBILE
+    FL --> ENSEMBLE
+    CL --> ENSEMBLE
+    MULTI --> API_SERVE
 ```
 
-Weights are optimized via constrained minimization (log-loss objective) on the validation set, subject to `w₁ + w₂ + w₃ = 1`, `wᵢ ≥ 0`.
-
-| Model | Weight | Contribution |
-|---|---|---|
-| XGBoost | Learned | Dominant for tabular feature interactions |
-| BiLSTM | Learned | Strong on sequential trend patterns |
-| Transformer | Learned | Critical for long-range attention windows |
-
-**Ensemble Test AUROC: 0.9579** — surpassing any individual model.
-
-### 5. Calibration & Threshold Optimization
-
-Raw model probabilities are poorly calibrated for clinical use. We apply **isotonic regression** post-hoc calibration:
-
-| Metric | Before Calibration | After Calibration | Improvement |
-|---|---|---|---|
-| **Brier Score** (XGBoost) | 0.0433 | 0.0230 | **46.8%** ↓ |
-| **ECE** (XGBoost) | 0.0547 | ~10⁻⁷ | **99.99%** ↓ |
-| **Brier Score** (BiLSTM) | 0.0621 | 0.0257 | **58.7%** ↓ |
-| **ECE** (BiLSTM) | 0.1625 | ~10⁻⁹ | **99.99%** ↓ |
-| **AUROC Preserved** | — | ✅ | No discriminative loss |
-
-We optimize **five distinct thresholds** for different clinical use cases:
-
-| Threshold Type | Value (XGBoost) | Use Case |
-|---|---|---|
-| **F1-optimal** | 0.920 | Balanced precision-recall |
-| **Youden's J** | 0.196 | Maximum sensitivity + specificity |
-| **Precision ≥90%** | 0.500 | Minimize false alarms in stable wards |
-| **Recall ≥90%** | 0.100 | Maximum catch rate for high-acuity ICU |
-| **Clinical** | 0.735 | Recommended operating point for bedside use |
-
-### 6. Explainability (SHAP)
-
-We integrate both **global** and **local** SHAP explanations:
-
-#### Global Feature Importance (Top 10)
-
-| Rank | Feature | Mean \|SHAP\| | Clinical Meaning |
-|---|---|---|---|
-| 1 | `lactate_delta` | 1.0199 | Acute metabolic decompensation |
-| 2 | `creatinine_delta` | 0.6457 | Renal function trajectory |
-| 3 | `spo2_pct_latest` | 0.4711 | Oxygenation status |
-| 4 | `shock_index_current` | 0.4310 | Hemodynamic instability |
-| 5 | `crp_level_delta` | 0.3035 | Inflammatory response trajectory |
-| 6 | `mobility_score_mean` | 0.3022 | Functional deterioration |
-| 7 | `lactate_roc` | 0.2931 | Lactate clearance rate |
-| 8 | `resp_rate_std` | 0.2883 | Respiratory variability |
-| 9 | `qsofa_score` | 0.2781 | Organ dysfunction severity |
-| 10 | `heart_rate_delta` | 0.2650 | Cardiovascular stress trend |
-
-#### Per-Patient Waterfall Explanations
-- Each prediction generates a **dynamic SHAP waterfall** showing exactly which features push risk up (🔴) or down (🟢)
-- Clinicians see: *"This patient's 72% risk is driven by rising lactate (+18%), falling SpO₂ (+12%), and tachycardia (+8%), partially offset by stable BP (−5%)"*
-
 ---
 
-## 📊 Performance Benchmarks
+## 🔄 Data Pipeline Architecture
 
-### Model Comparison (Internal Test Set)
+```mermaid
+flowchart LR
+    subgraph "Raw Data"
+        A["patients.csv<br/>5,000 patients"]
+        B["vitals_timeseries.csv<br/>Hourly vitals"]
+        C["labs_timeseries.csv<br/>Lab results"]
+        D["MIMIC-IV Demo<br/>Clinical database"]
+    end
 
-> All four rows below were evaluated on the **same held-out 15% test split** from our dataset, enabling a fair internal comparison.
+    subgraph "Stage 1: Ingestion"
+        E["FastAPI Validator<br/>Pydantic range checks"]
+        F["Kafka Producer<br/>Topic routing"]
+        G["Data Lake Router<br/>Parquet partitioned"]
+    end
 
-| Model | AUROC | AUPRC | F1 | Precision | Recall | Specificity |
-|---|---|---|---|---|---|---|
-| XGBoost | 0.9552 | 0.7219 | 0.6124 | 0.5037 | 0.7810 | 0.9549 |
-| BiLSTM | 0.9520 | 0.6680 | 0.6426 | 0.5516 | 0.7694 | 0.9634 |
-| Transformer | 0.9492 | 0.6423 | 0.6398 | 0.6320 | 0.6478 | 0.9779 |
-| **Ensemble** | **0.9579** | **0.7018** | **0.6921** | **0.7691** | **0.6292** | **0.9889** |
+    subgraph "Stage 2: Preprocessing"
+        H["Schema Validation<br/>Column types"]
+        I["Forward-Fill +<br/>Median Imputation"]
+        J["Hourly Time<br/>Alignment"]
+        K["Feature Extraction<br/>215 engineered features"]
+    end
 
-### Literature Comparison with Traditional Scoring Systems
+    subgraph "Stage 3: Windowing"
+        L["Sliding Windows<br/>(6h, 12h)"]
+        M["Label Generation<br/>12h lookahead"]
+        N["Patient-Level<br/>Train/Val/Test Split<br/>70/15/15"]
+    end
 
-> ⚠️ **Methodology Note**: This is a **literature-based comparison**, not a head-to-head evaluation on a shared dataset. NEWS/MEWS/qSOFA figures are drawn from peer-reviewed validation studies on real-world hospital cohorts (UK/US populations). G_One_Sync AI figures are from our internal held-out test set. Direct numerical comparison should be interpreted with caution — real-world production performance of our model may differ. A prospective clinical validation study is required before deployment.
+    subgraph "Stage 4: Output"
+        O["ML-Ready CSV<br/>~42 MB"]
+        P["Hourly Panel CSV<br/>~51 MB"]
+        Q["Sequence Tensors<br/>(N, W, F)"]
+    end
 
-| System | AUROC | Sensitivity | Specificity | Real-Time | Explainable | Source |
-|---|---|---|---|---|---|---|
-| NEWS (National Early Warning Score) | 0.73–0.79 | 42% | 87% | ❌ Manual | ❌ Score only | Smith et al., 2013 |
-| MEWS (Modified EWS) | 0.68–0.74 | 30–40% | 85% | ❌ Manual | ❌ Score only | Subbe et al., 2001 |
-| qSOFA | 0.60–0.70 | 50% | 72% | ❌ Manual | ❌ Score only | Seymour et al., 2016 |
-| **G_One_Sync AI** | **0.9579** | **62.9%** | **98.9%** | **✅ WebSocket** | **✅ SHAP + Attention** | *This work (internal test set)* |
+    A & B & C & D --> E --> F --> G
+    G --> H --> I --> J --> K
+    K --> L --> M --> N
+    N --> O & P & Q
+```
 
-> On our internal evaluation, G_One_Sync AI demonstrates a **~20–30 percentage point improvement in AUROC** relative to traditional scoring systems as reported in published literature. The extremely high specificity (98.9%) at the clinical operating threshold suggests significantly reduced alert burden compared to threshold-based systems.
+### Engineered Features (215 total)
 
----
+For each of the 15 numeric input signals, the feature extractor computes:
 
-## 📺 Real-Time Clinical Dashboard
+| Feature Type | Count per Signal | Example |
+|-------------|-----------------|---------|
+| Latest value | 1 | `heart_rate_latest` |
+| Mean | 1 | `heart_rate_mean` |
+| Std deviation | 1 | `heart_rate_std` |
+| Min / Max | 2 | `heart_rate_min`, `heart_rate_max` |
+| Median | 1 | `heart_rate_median` |
+| Slope (linear trend) | 1 | `heart_rate_slope` |
+| Delta (first-last) | 1 | `heart_rate_delta` |
+| Rate of change | 1 | `heart_rate_roc` |
+| Acceleration | 1 | `heart_rate_accel` |
+| Coefficient of variation | 1 | `heart_rate_cv` |
+| IQR | 1 | `heart_rate_iqr` |
+| Skewness | 1 | `heart_rate_skew` |
+| Kurtosis | 1 | `heart_rate_kurt` |
 
-The interactive dashboard provides a command-center view of all monitored ICU patients:
-
-### Overview Tab
-- **KPI Strip**: Total patients, critical/high-risk counts, ensemble AUROC, GPU utilization
-- **Risk Distribution Donut**: Live breakdown of LOW/MODERATE/HIGH/CRITICAL patients
-- **Deterioration Trend**: Rolling 60-minute mean deterioration percentage
-- **Model Performance Comparison**: Horizontal bar chart of all 4 model AUROC scores
-- **System Health Widget**: Real-time monitoring of data freshness, Kafka lag, model latency, database query time
-
-### Patients Tab
-- **30-Patient Grid**: Each card shows risk score, vital signs, sparkline trend, and risk badge
-- **Filter & Search**: Filter by risk level (ALL/LOW/MODERATE/HIGH/CRITICAL) + text search
-- **Real-Time WebSocket Updates**: Cards flash and animate on each incoming prediction update
-
-### Patient Detail Modal (Click Any Patient)
-Opening a patient card reveals **7 advanced clinical intelligence modules**:
-
-| Module | What It Shows |
-|---|---|
-| **Risk Trajectory** | Dual-axis chart: AI risk score + selected vital sign (HR/BP/SpO₂/RR/Lactate) with clinical baseline bands |
-| **SHAP Waterfall** | Per-feature contribution bars showing what drives this patient's risk up or down |
-| **What-If Analysis** | Interactive sliders for BP/HR/Lactate/SpO₂ — instantly projects risk impact of hypothetical interventions |
-| **Live ECG & PPG** | Animated real-time waveform rendering with PQRST morphology and photoplethysmography at ~30fps |
-| **Attention Heatmap** | Color-coded temporal windows showing which historical time periods the model considers most significant |
-| **Intervention Window** | SVG countdown ring estimating hours until critical threshold, with urgency color coding |
-| **Protocol Checklists** | Context-aware clinical SOP buttons (Sepsis Bundle, Respiratory Protocol, Cardiac, Rapid Response) with step-by-step checklists |
-
-### Analytics Tab
-- **Prediction Volume**: 24-hour bar chart showing prediction throughput per hour
-- **SHAP Feature Importance**: Full 15-feature horizontal bar chart
-- **Risk Category Timeline**: Stacked area chart tracking patient counts by risk level over time
-- **Alert Distribution**: Doughnut chart of CRITICAL/WARNING/INFO alert counts
-- **Model Performance Table**: All models with AUROC, AUPRC, F1, Precision, Recall
-
-### Critical Alarm System
-When any patient exceeds **80% deterioration probability**:
-- 🔴 **Full-screen pulsing red overlay** with patient details
-- 🔊 **Web Audio API alarm** (dual-frequency pulsing tone)
-- ⚡ **Body border flash animation** to catch peripheral attention
-- ✅ **Acknowledge** button (2-minute cooldown to prevent re-triggering)
-- 👁️ **View Patient** button to jump directly to the patient detail
-
----
-
-## 🔔 Monitoring & Alerting
-
-### Drift Detection
-- **Population Stability Index (PSI)**: Monitors feature distribution shifts between training and production data
-- **KL Divergence**: Detects prediction distribution drift
-- **Automatic alerts** when PSI > 0.2 (moderate drift) or > 0.25 (severe — retraining suggested)
-
-### Alerting Engine
-Rule-based alerting with configurable severity, cooldowns, and escalation:
-
-| Rule | Severity | Cooldown | Trigger |
-|---|---|---|---|
-| Critical Deterioration Risk | 🔴 CRITICAL | 60s | Probability ≥ 75% |
-| High Deterioration Risk | 🟡 WARNING | 5min | 50% ≤ Probability < 75% |
-| Rapid Risk Increase | 🔴 CRITICAL | 2min | Probability jumps > 20% |
-| GPU Memory High | 🟡 WARNING | 10min | GPU utilization > 90% |
-| High Prediction Latency | 🟡 WARNING | 5min | Latency > 500ms |
-| Feature Drift | 🟡 WARNING | 1hr | PSI > 0.2 |
-| Prediction Drift | 🔴 CRITICAL | 30min | Relative drift > 25% |
-
-### Prometheus Metrics
-Exposes standard metrics at `/metrics` for Grafana integration:
-- `prediction_latency_seconds` (histogram)
-- `prediction_count_total` (counter by risk level)
-- `model_error_total` (counter)
-- `drift_psi_current` (gauge by feature)
-
----
-
-## 🆚 Why G_One_Sync AI Is Different
-
-| Aspect | Traditional EWS | Single-Model ML | **G_One_Sync AI** |
-|---|---|---|---|
-| **Architecture** | Static scoring | Single model (usually XGBoost) | **Multi-model ensemble (XGB + BiLSTM + Transformer)** |
-| **Temporal Modeling** | ❌ None | Minimal | **✅ BiLSTM + Transformer attention over 12h windows** |
-| **Calibration** | ❌ Uncalibrated | Rarely calibrated | **✅ Isotonic calibration (ECE → 10⁻⁹)** |
-| **Explainability** | ❌ Score only | Feature importance only | **✅ Per-patient SHAP waterfall + temporal attention heatmap** |
-| **Counterfactual** | ❌ None | ❌ None | **✅ What-if analysis: "If we fix BP, risk drops 15%"** |
-| **Real-Time** | ❌ Manual scoring | Batch predictions | **✅ WebSocket live streaming at sub-second latency** |
-| **Alert Intelligence** | ❌ Fixed thresholds | Basic threshold | **✅ Rule-based engine with cooldowns, severity tiers, rapid-increase detection** |
-| **Clinical Protocols** | ❌ Separate lookup | ❌ Not integrated | **✅ Auto-linked Sepsis/Respiratory/Cardiac SOPs** |
-| **Waveform Analysis** | ❌ None | ❌ None | **✅ Live ECG/PPG rendering with anomaly potential** |
-| **Drift Detection** | ❌ None | Rarely | **✅ PSI + KL divergence with automated alerts** |
-| **Deployment** | Paper-based | Notebook | **✅ Docker + CI/CD + MLflow + Prometheus** |
+Plus clinical composite scores:
+- **Shock Index** (HR / SBP) — current, mean, max
+- **MAP** (Mean Arterial Pressure) — current, mean
+- **qSOFA Score** — bedside sepsis screening
+- **Age, gender, comorbidity index, admission type** — static features
 
 ---
 
@@ -410,53 +284,262 @@ Exposes standard metrics at `/metrics` for Grafana integration:
 
 ```
 G_One_Sync_AI/
-├── .github/workflows/          # CI/CD pipelines
-│   ├── ci.yml                  # Lint + test on push/PR
-│   └── cd.yml                  # Docker build + deploy on release
-├── config/
-│   ├── settings.py             # Pydantic-based central configuration
-│   └── logging_config.py       # Loguru structured logging
-├── src/
-│   ├── ingestion/              # FastAPI data ingestion + Kafka streaming
-│   ├── preprocessing/          # Cleaning, imputation, sliding windows
-│   ├── modeling/
-│   │   ├── base_trainer.py     # Abstract base class for all trainers
-│   │   ├── xgboost_trainer.py  # XGBoost with Optuna HPO
-│   │   ├── lstm_trainer.py     # BiLSTM with attention pooling
-│   │   ├── transformer_trainer.py  # Transformer encoder
-│   │   ├── ensemble.py         # Learned-weight ensemble combiner
-│   │   ├── calibration.py      # Isotonic + Platt calibration
-│   │   ├── hpo.py              # Optuna hyperparameter optimization
-│   │   ├── losses.py           # Focal loss, class-weighted BCE
-│   │   ├── data_loader.py      # PyTorch Dataset + DataLoader
-│   │   ├── experiment_tracker.py  # MLflow integration
-│   │   └── train_pipeline.py   # End-to-end training orchestrator
-│   ├── explainability/
-│   │   └── shap_explainer.py   # Global + local SHAP explanations
-│   ├── monitoring/
-│   │   ├── alerting.py         # Rule-based alerting engine
-│   │   ├── drift_detector.py   # PSI/KL drift detection
-│   │   └── metrics_collector.py # Prometheus metrics exporter
-│   ├── serving/                # FastAPI model serving (port 8001)
-│   └── dashboard/
-│       ├── app.py              # FastAPI dashboard + WebSocket + 10 REST APIs
-│       └── static/
-│           ├── index.html      # Dashboard layout with 7 clinical modules
-│           ├── style.css       # Dark glassmorphism theme (1000+ lines)
-│           └── dashboard.js    # Chart.js + Canvas animations (1600+ lines)
-├── models/artifacts/           # Saved models + training_summary.json
-├── docker/
-│   ├── Dockerfile              # Multi-stage production build
-│   └── docker-compose.yml      # Full stack: API + Redpanda + MLflow
-├── tests/
-│   ├── test_ingestion.py       # Data ingestion validation
-│   ├── test_preprocessing.py   # Preprocessing pipeline tests
-│   ├── test_modeling.py        # Model training + drift detection tests
-│   └── test_serving.py         # API endpoint integration tests
-├── requirements.txt            # Python dependencies
-├── pyproject.toml              # Project metadata + tool configs
-└── README.md                   # This file
+│
+├── config/                          # Centralized configuration
+│   ├── __init__.py
+│   ├── settings.py                  # 11 Pydantic settings classes
+│   └── logging_config.py            # Loguru structured logging setup
+│
+├── src/                             # Core application source code
+│   ├── ingestion/                   # Data ingestion layer
+│   │   ├── ingest_api.py            # FastAPI REST ingest server (port 8000)
+│   │   ├── schemas.py               # Pydantic validation schemas
+│   │   ├── kafka_producer.py        # Redpanda/Kafka event producer
+│   │   ├── kafka_consumer.py        # Stream consumer for preprocessing
+│   │   ├── data_lake_router.py      # Parquet-based data lake storage
+│   │   ├── simulate_stream.py       # ICU data stream simulator
+│   │   └── emr/                     # EMR/EHR integration
+│   │       ├── fhir_client.py       # FHIR R4 REST client
+│   │       ├── fhir_mapper.py       # FHIR → internal format mapper
+│   │       ├── fhir_schemas.py      # FHIR resource Pydantic models
+│   │       ├── fhir_subscription.py # FHIR R4 subscription handler
+│   │       ├── hl7_listener.py      # HL7v2 MLLP TCP listener
+│   │       ├── hl7_parser.py        # HL7v2 message parser (ORU^R01)
+│   │       ├── hl7_mapper.py        # HL7v2 → internal format mapper
+│   │       └── audit_logger.py      # PHI access audit trail
+│   │
+│   ├── preprocessing/               # Feature engineering pipeline
+│   │   ├── pipeline.py              # End-to-end orchestrator
+│   │   ├── schema_validator.py      # Column type & range validation
+│   │   ├── imputation.py            # Forward-fill + median imputation
+│   │   ├── time_alignment.py        # Hourly time alignment
+│   │   ├── feature_extractor.py     # CPU feature extraction (215 features)
+│   │   ├── gpu_feature_extractor.py # GPU-accelerated feature extraction
+│   │   ├── sliding_window.py        # Temporal sliding windows (6h, 12h)
+│   │   └── label_generator.py       # Multi-horizon label generation
+│   │
+│   ├── modeling/                     # ML model training
+│   │   ├── train_pipeline.py        # End-to-end training orchestrator
+│   │   ├── base_trainer.py          # Abstract base class for all trainers
+│   │   ├── xgboost_trainer.py       # XGBoost GPU histogram trainer
+│   │   ├── lstm_trainer.py          # Bidirectional LSTM trainer
+│   │   ├── transformer_trainer.py   # Multi-head attention Transformer
+│   │   ├── ensemble.py              # Hybrid ensemble (learned stacking)
+│   │   ├── calibration.py           # Isotonic + Platt + Temperature scaling
+│   │   ├── hpo.py                   # Optuna hyperparameter optimization
+│   │   ├── losses.py                # Focal Loss for class imbalance
+│   │   ├── data_loader.py           # Train/val/test data loading
+│   │   ├── experiment_tracker.py    # MLflow experiment tracking wrapper
+│   │   └── multi_outcome/           # Multi-outcome prediction
+│   │       ├── multi_head_model.py  # Shared-trunk multi-head Transformer
+│   │       ├── multi_label_trainer.py # Multi-task training loop
+│   │       ├── label_definitions.py # Outcome-specific label generators
+│   │       └── outcome_schemas.py   # Multi-outcome API schemas
+│   │
+│   ├── explainability/              # Model interpretability
+│   │   └── shap_explainer.py        # SHAP TreeExplainer + DeepExplainer
+│   │
+│   ├── serving/                     # Model serving API
+│   │   ├── model_server.py          # FastAPI prediction server (port 8001)
+│   │   ├── auth.py                  # JWT authentication middleware
+│   │   ├── mobile_router.py         # Mobile-specific API endpoints
+│   │   ├── mobile_schemas.py        # Mobile API Pydantic schemas
+│   │   ├── multi_outcome_router.py  # Multi-outcome prediction endpoints
+│   │   └── push_notifications.py    # Firebase Cloud Messaging integration
+│   │
+│   ├── monitoring/                  # Production monitoring
+│   │   ├── metrics_collector.py     # Prometheus metrics exporter
+│   │   ├── drift_detector.py        # PSI + KS-test drift detection
+│   │   └── alerting.py              # Clinical alerting engine
+│   │
+│   ├── dashboard/                   # Clinical monitoring dashboard
+│   │   ├── app.py                   # FastAPI + WebSocket dashboard server
+│   │   └── static/                  # Dashboard HTML/CSS/JS assets
+│   │
+│   ├── continuous/                  # Continuous learning pipeline
+│   │   ├── retrain_orchestrator.py  # Drift-triggered retraining coordinator
+│   │   ├── data_accumulator.py      # Production data buffer for retraining
+│   │   ├── champion_challenger.py   # A/B model comparison evaluation
+│   │   ├── shadow_evaluator.py      # Shadow mode model evaluation
+│   │   └── model_versioner.py       # Model version management
+│   │
+│   └── federated/                   # Federated learning
+│       ├── coordinator.py           # Central FL coordinator server
+│       ├── participant.py           # Hospital-site FL participant
+│       ├── aggregator.py            # FedAvg / FedProx / FedBN strategies
+│       ├── fl_schemas.py            # FL protocol Pydantic schemas
+│       ├── privacy.py               # Rényi Differential Privacy accountant
+│       ├── secure_aggregation.py    # Secure aggregation protocol
+│       └── proto/                   # gRPC protobuf definitions
+│
+├── mobile/                          # React Native companion app
+│   ├── App.tsx                      # Root application component
+│   ├── src/
+│   │   ├── screens/                 # App screens
+│   │   │   ├── LoginScreen.tsx      # Physician authentication
+│   │   │   ├── DashboardScreen.tsx  # Patient overview & risk scores
+│   │   │   ├── PatientDetailScreen.tsx # Individual patient details + SHAP
+│   │   │   └── AlertsScreen.tsx     # Alert history & management
+│   │   ├── components/              # Reusable UI components
+│   │   │   ├── RiskBadge.tsx        # Color-coded risk level badge
+│   │   │   ├── VitalCard.tsx        # Vital sign display card
+│   │   │   └── SHAPChart.tsx        # SHAP waterfall visualization
+│   │   ├── navigation/             # React Navigation setup
+│   │   ├── services/               # API client & push notifications
+│   │   ├── types/                  # TypeScript type definitions
+│   │   └── utils/                  # Constants & helpers
+│   ├── app.json                    # Expo configuration
+│   ├── package.json                # Node.js dependencies
+│   └── tsconfig.json               # TypeScript configuration
+│
+├── tests/                           # Comprehensive test suite
+│   ├── test_ingestion.py            # Ingest API endpoint tests
+│   ├── test_preprocessing.py        # Feature extraction & pipeline tests
+│   ├── test_modeling.py             # Model training & prediction tests
+│   ├── test_serving.py              # Serving API endpoint tests
+│   ├── test_emr_integration.py      # FHIR + HL7v2 integration tests
+│   ├── test_federated.py           # Federated learning tests
+│   ├── test_continuous_learning.py  # Continuous learning lifecycle tests
+│   ├── test_mobile_api.py          # Mobile API & auth tests
+│   └── test_multi_outcome.py       # Multi-outcome prediction tests
+│
+├── compliance/                      # FDA/regulatory compliance artifacts
+│   ├── design_controls/            # IEC 62304 design documentation
+│   │   ├── user_needs.md           # Clinical user requirements
+│   │   ├── design_inputs.md        # Technical specifications
+│   │   ├── design_outputs.md       # Implementation documentation
+│   │   ├── design_verification.md  # Verification test results
+│   │   └── design_validation.md    # Clinical validation summary
+│   ├── risk_management/            # ISO 14971 risk management
+│   │   ├── risk_analysis.md        # Comprehensive risk analysis
+│   │   ├── fmea.md                 # Failure Mode & Effects Analysis
+│   │   ├── hazard_log.md           # Hazard identification log
+│   │   └── risk_benefit_analysis.md # Risk-benefit assessment
+│   ├── qms/                        # Quality Management System SOPs
+│   │   ├── SOP-001_design_controls.md
+│   │   ├── SOP-002_risk_management.md
+│   │   ├── SOP-003_software_lifecycle.md
+│   │   ├── SOP-004_change_management.md
+│   │   ├── SOP-005_complaint_handling.md
+│   │   └── SOP-006_corrective_actions.md
+│   ├── templates/                  # Regulatory document templates
+│   │   ├── model_card_template.md  # ML Model Card
+│   │   └── intended_use_statement.md # FDA intended use
+│   ├── traceability/               # Requirements traceability
+│   │   ├── traceability_matrix.md  # Requirements → Tests matrix
+│   │   └── traceability_matrix.json # Machine-readable traceability
+│   ├── sbom/                       # Software Bill of Materials
+│   │   ├── sbom.json               # CycloneDX SBOM
+│   │   └── sbom_report.md          # Human-readable SBOM report
+│   └── scripts/                    # Compliance automation scripts
+│
+├── docs/                            # Clinical & regulatory documentation
+│   └── regulatory/
+│       ├── clinical_validation/    # Clinical trial protocol
+│       │   ├── study_protocol.md
+│       │   ├── statistical_analysis_plan.md
+│       │   ├── sample_size_calculation.md
+│       │   ├── inclusion_exclusion.md
+│       │   └── endpoints.md
+│       ├── performance_report/     # Model performance documentation
+│       │   ├── calibration_analysis.md
+│       │   ├── failure_mode_analysis.md
+│       │   ├── sensitivity_specificity.md
+│       │   └── subgroup_analysis.md
+│       └── predicate_comparison/   # 510(k) predicate analysis
+│           ├── substantial_equivalence.md
+│           ├── mews_comparison.md
+│           └── news2_comparison.md
+│
+├── docker/                          # Containerization
+│   ├── Dockerfile                   # NVIDIA CUDA 12.4 base image
+│   └── docker-compose.yml           # Full service stack (6 services)
+│
+├── scripts/                         # Utility scripts
+│   └── simulate_emr_feed.py        # EMR data feed simulator
+│
+├── dataset/                         # Raw data files
+│   ├── patients.csv                 # 5,000 synthetic ICU patients
+│   ├── vitals_timeseries.csv        # Hourly vital sign measurements
+│   ├── labs_timeseries.csv          # Lab results time series
+│   ├── hospital_deterioration_hourly_panel.csv  # Merged hourly panel (~51 MB)
+│   ├── hospital_deterioration_ml_ready.csv      # ML-ready features (~42 MB)
+│   └── mimic-iv-clinical-database-demo-2.2/     # MIMIC-IV demo data
+│
+├── data/                            # Runtime data directories
+│   ├── datalake/                   # Ingested data (Parquet)
+│   ├── processed/                  # Preprocessed datasets
+│   ├── local_queue/                # Kafka fallback queue
+│   └── audit/                      # PHI access audit logs
+│
+├── models/                          # Trained model artifacts
+│   └── artifacts/
+│       ├── xgboost/                # XGBoost model files
+│       ├── bilstm/                 # BiLSTM PyTorch checkpoints
+│       ├── transformer/            # Transformer PyTorch checkpoints
+│       ├── federated/              # Federated learning checkpoints
+│       ├── explanations/           # SHAP explanation artifacts
+│       ├── training_summary.json   # Complete metrics for all models
+│       └── optimal_thresholds.json # Clinically-optimized thresholds
+│
+├── .github/workflows/              # CI/CD pipelines
+│   ├── ci.yml                      # Lint + Test + Compliance validation
+│   └── cd.yml                      # Docker build + Registry push
+│
+├── requirements.txt                 # Python dependencies (32 packages)
+├── pyproject.toml                   # Project metadata + tool config
+├── mlflow.db                        # MLflow experiment database
+└── report/                          # Academic report
+    └── Part1_Abstract_AreaOfWork_Ch1.md
 ```
+
+---
+
+## 🛠 Technology Stack
+
+### Backend & ML
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Language | Python 3.10+ | Core runtime |
+| ML Framework | PyTorch 2.x (CUDA 12.4) | Deep learning training & inference |
+| Gradient Boosting | XGBoost 2.1+ (GPU) | Tabular feature model |
+| API Framework | FastAPI 0.111+ | REST APIs + WebSocket |
+| ASGI Server | Uvicorn | Production server |
+| Data Processing | Pandas 2.2+ / NumPy 2.0+ | Data manipulation |
+| Experiment Tracking | MLflow 2.14+ | Model versioning & metrics |
+| HPO | Optuna 3.6+ | Bayesian hyperparameter search |
+| Explainability | SHAP 0.45+ | Feature importance explanations |
+| Streaming | Redpanda (Kafka-compatible) | Event streaming |
+| Monitoring | Prometheus Client 0.20+ | Metrics collection |
+| Visualization | Plotly 5.22+ | Dashboard charts |
+| Logging | Loguru 0.7+ | Structured JSON logging |
+| Validation | Pydantic 2.7+ / Pydantic-Settings | Schema validation & config |
+| Privacy | Opacus 1.5+ | Differential privacy for FL |
+| EMR | fhirpy 2.0+ / hl7apy 1.3+ | FHIR R4 + HL7v2 integration |
+| Auth | PyJWT 2.8+ / bcrypt 4.1+ | JWT token authentication |
+| gRPC | grpcio 1.64+ | Federated learning transport |
+| Linting | Ruff | Formatting & linting |
+
+### Frontend & Mobile
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Mobile Framework | React Native 0.86 | Cross-platform mobile app |
+| Mobile Platform | Expo SDK 57 | Build & deploy tooling |
+| Language | TypeScript 5.8+ | Type-safe mobile development |
+| Push Notifications | Firebase Cloud Messaging | Real-time clinical alerts |
+| Biometrics | expo-local-authentication | Secure physician login |
+
+### Infrastructure
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Container Runtime | Docker + Docker Compose | Service orchestration |
+| GPU Base Image | nvidia/cuda:12.4.0-runtime | GPU inference support |
+| Message Broker | Redpanda v24.1.1 | Kafka-compatible streaming |
+| ML Registry | MLflow v2.16.0 | Model artifact storage |
+| CI/CD | GitHub Actions | Automated testing & deployment |
 
 ---
 
@@ -464,251 +547,962 @@ G_One_Sync_AI/
 
 ### Prerequisites
 
-- **Python** ≥ 3.10
-- **CUDA** ≥ 12.4 (for GPU training; CPU fallback available)
-- **Git**
+- **Python 3.10+**
+- **NVIDIA GPU** with CUDA 12.4 drivers (recommended: RTX 3050 4GB+)
+- **Node.js 18+** (for mobile app)
+- **Docker & Docker Compose** (for containerized deployment)
 
-### Installation
+### 1. Clone & Setup
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/yourusername/G_One_Sync_AI.git
+git clone https://github.com/Shubhammm24/G_One_Sync_AI.git
 cd G_One_Sync_AI
 
-# 2. Create virtual environment
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
-# OR
 venv\Scripts\activate     # Windows
 
-# 3. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Install PyTorch with CUDA (adjust for your CUDA version)
+# Install PyTorch with CUDA 12.4
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
-### Training the Model
+### 2. Run the Preprocessing Pipeline
 
 ```bash
-# Ensure dataset is placed in dataset/ directory
-# Required files: patients.csv, vitals_timeseries.csv, labs_timeseries.csv
+python -m src.preprocessing.pipeline
+```
 
-# Run the complete training pipeline
+This executes the full preprocessing chain: validation → imputation → time alignment → feature extraction → label generation → patient-level train/val/test split.
+
+### 3. Train Models
+
+```bash
+# Train all models (XGBoost + BiLSTM + Transformer + Ensemble)
 python -m src.modeling.train_pipeline
 
-# This will:
-# 1. Load and preprocess data
-# 2. Engineer 60+ temporal features
-# 3. Train XGBoost, BiLSTM, and Transformer models
-# 4. Optimize ensemble weights
-# 5. Calibrate probabilities (isotonic regression)
-# 6. Compute SHAP explanations
-# 7. Save all artifacts to models/artifacts/
-# 8. Log metrics to MLflow
+# Train specific model
+python -m src.modeling.train_pipeline --model xgboost
+
+# Train with hyperparameter optimization
+python -m src.modeling.train_pipeline --model all --hpo
 ```
 
-### Running the Dashboard
+### 4. Start the Serving API
 
 ```bash
-# Start the clinical monitoring dashboard (port 8002)
-python -m src.dashboard.app
+# Start prediction server (port 8001)
+uvicorn src.serving.model_server:app --host 0.0.0.0 --port 8001
 
-# Open in browser
-# http://localhost:8002
+# Start ingestion server (port 8000)
+uvicorn src.ingestion.ingest_api:app --host 0.0.0.0 --port 8000
+
+# Start clinical dashboard (port 8081)
+uvicorn src.dashboard.app:app --host 0.0.0.0 --port 8081
 ```
 
-### Running the Serving API
+### 5. Launch Mobile App
 
 ```bash
-# Start the prediction API (port 8001)
-python -m src.serving.serve
-
-# Example prediction request:
-curl -X POST http://localhost:8001/predict \
-  -H "Content-Type: application/json" \
-  -d '{"heart_rate": 110, "spo2": 91, "lactate": 3.2, ...}'
+cd mobile
+npm install
+npx expo start --web   # Web browser
+npx expo start          # Expo Go (iOS/Android)
 ```
 
 ---
 
-## 🐳 Docker Deployment
+## 📡 Data Ingestion
 
-```bash
-# Full stack deployment (API + Redpanda + MLflow)
-cd docker
-docker-compose up -d
+The ingestion layer provides high-throughput, validated data entry points for ICU data streams.
 
-# Services:
-# - Prediction API:   http://localhost:8001
-# - Ingestion API:    http://localhost:8000
-# - MLflow UI:        http://localhost:5000
-# - Redpanda Kafka:   localhost:9092
-```
-
-The Docker setup includes:
-- **NVIDIA GPU passthrough** for GPU-accelerated inference
-- **Health checks** on all services
-- **Persistent volumes** for Redpanda data and MLflow artifacts
-- **Auto-restart** on failure
-
----
-
-## ⚙️ Configuration
-
-All settings are managed via **environment variables** with sensible defaults (Pydantic-settings):
-
-| Category | Prefix | Key Settings |
-|---|---|---|
-| **Data** | `JEEVAN_DATA_` | Dataset paths, data lake directory |
-| **Kafka** | `JEEVAN_KAFKA_` | Broker address, topics, consumer groups |
-| **Features** | `JEEVAN_FEATURE_` | Window sizes, prediction horizon, target column |
-| **API** | `JEEVAN_API_` | Host, port, CORS origins |
-| **Model** | `JEEVAN_MODEL_` | Hyperparameters, GPU device, Optuna trials |
-| **Serving** | `JEEVAN_SERVING_` | Serving host/port, model cache TTL |
-
-Example `.env`:
-```env
-JEEVAN_MODEL_USE_GPU=true
-JEEVAN_MODEL_EPOCHS=50
-JEEVAN_MODEL_BATCH_SIZE=64
-JEEVAN_FEATURE_PREDICTION_HORIZON=12
-JEEVAN_API_PORT=8000
-```
-
-> **Note on env prefix**: The `JEEVAN_` prefix in environment variables is from the original internal codebase configuration. These are code-level variable names and do not affect project branding.
-
----
-
-## 🧪 Testing
-
-```bash
-# Run full test suite
-pytest tests/ -v
-
-# Run specific test modules
-pytest tests/test_preprocessing.py -v    # Data pipeline tests
-pytest tests/test_modeling.py -v         # Model + drift tests
-pytest tests/test_ingestion.py -v        # API ingestion tests
-pytest tests/test_serving.py -v          # Serving endpoint tests
-
-# Expected: 62+ passing tests
-```
-
-Test coverage includes:
-- **Preprocessing**: Schema validation, imputation strategies, feature extraction correctness
-- **Modeling**: Model training sanity, ensemble weight constraints, drift detection (PSI/KL)
-- **Ingestion**: API endpoint validation, batch upload, schema rejection
-- **Serving**: Prediction endpoint, health check, model loading
-
----
-
-## 🔄 CI/CD Pipeline
-
-### Continuous Integration (`.github/workflows/ci.yml`)
-- Triggers on push/PR to `main` and `develop`
-- Runs linting (Ruff) + full test suite
-- Python 3.10+ matrix testing
-
-### Continuous Deployment (`.github/workflows/cd.yml`)
-- Triggers on release tag
-- Builds Docker image
-- Pushes to container registry
-- Deploys to staging/production
-
----
-
-## 📡 API Reference
-
-### Dashboard APIs (Port 8002)
+### Ingestion API (Port 8000)
 
 | Endpoint | Method | Description |
-|---|---|---|
-| `/` | GET | Clinical dashboard UI |
-| `/api/patients` | GET | Current patient risk overview |
-| `/api/metrics` | GET | System + model metrics snapshot |
-| `/api/shap` | GET | Global SHAP feature importance |
-| `/api/alerts` | GET | Recent clinical alerts |
-| `/api/patient/{pid}/trajectory` | GET | Risk trajectory + vital sign baselines |
-| `/api/patient/{pid}/shap` | GET | Per-patient SHAP waterfall |
-| `/api/patient/{pid}/whatif` | GET | Counterfactual risk projection |
-| `/api/patient/{pid}/waveforms` | GET | Simulated ECG/PPG waveform data |
-| `/api/patient/{pid}/attention` | GET | Temporal attention heatmap weights |
-| `/api/system/health` | GET | System health + data freshness |
-| `/api/protocols/{condition}` | GET | Clinical intervention SOP checklist |
-| `/ws/live` | WS | WebSocket real-time patient updates |
+|----------|--------|-------------|
+| `/health` | GET | Health check with Kafka status |
+| `/ingest/vitals` | POST | Single vital sign measurement |
+| `/ingest/labs` | POST | Single lab result |
+| `/ingest/batch` | POST | Batch vitals + labs payload |
+| `/ingest/flat` | POST | Flat CSV-like row ingestion |
 
-### Serving API (Port 8001)
+### Data Validation
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/health` | GET | Model server health check |
-| `/predict` | POST | Single patient deterioration prediction |
-| `/predict/batch` | POST | Batch predictions |
+All incoming data is validated against clinical ranges using Pydantic:
 
----
+| Vital Sign | Valid Range | Unit |
+|-----------|------------|------|
+| Heart Rate | 20 – 300 | BPM |
+| Respiratory Rate | 4 – 60 | breaths/min |
+| SpO₂ | 50 – 100 | % |
+| Temperature | 30.0 – 45.0 | °C |
+| Systolic BP | 40 – 300 | mmHg |
+| Diastolic BP | 20 – 200 | mmHg |
 
-## 🗺️ Roadmap
+### Streaming Architecture
 
-- [ ] **Phase 5 — Production Integration**: Connect to real EMR via HL7/FHIR interfaces
-- [ ] **Phase 6 — Federated Learning**: Train across multiple hospital sites without sharing patient data
-- [ ] **Phase 7 — Continuous Learning**: Online model updates with drift-triggered retraining
-- [ ] **Phase 8 — Mobile App**: React Native companion for attending physicians
-- [ ] **Phase 9 — FDA/CE Compliance**: Prepare clinical validation package for regulatory submission
-- [ ] **Phase 10 — Multi-outcome Prediction**: Extend beyond deterioration to sepsis, cardiac arrest, and respiratory failure sub-types
+```mermaid
+sequenceDiagram
+    participant Monitor as Bedside Monitor
+    participant API as Ingest API
+    participant Kafka as Redpanda
+    participant Lake as Data Lake
+    participant Fallback as Local Queue
 
----
-
-## 🤝 Contributing
-
-We welcome contributions from the clinical AI research community:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-improvement`)
-3. Commit your changes (`git commit -m 'feat: add amazing improvement'`)
-4. Push to the branch (`git push origin feature/amazing-improvement`)
-5. Open a Pull Request
-
-Please ensure all tests pass (`pytest tests/ -v`) before submitting.
+    Monitor->>API: POST /ingest/vitals
+    API->>API: Pydantic validation
+    alt Kafka Connected
+        API->>Kafka: Publish to icu-vitals topic
+        Kafka->>Lake: Consumer writes Parquet
+    else Kafka Down
+        API->>Fallback: Write to local file queue
+        Note over Fallback: Auto-replayed when<br/>broker reconnects
+    end
+    API-->>Monitor: 200 OK (trace_id)
+```
 
 ---
 
-## 📄 License
+## ⚙️ Preprocessing Pipeline
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+The preprocessing pipeline transforms raw clinical data into ML-ready feature matrices.
+
+### Pipeline Stages
+
+```
+Raw CSV Data
+    │
+    ▼
+┌─────────────────┐
+│ Schema Validator │  Validates column types, detects missing columns
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ Imputation      │  Forward-fill + group-median for missing values
+│ Engine          │  Per-patient temporal imputation
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ Time Aligner    │  Aligns irregular samples to hourly grid
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ Feature         │  Extracts 215 statistical features from sliding
+│ Extractor (GPU) │  windows: mean, std, slope, delta, RoC, etc.
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ Label Generator │  Creates binary labels: "will deteriorate in
+│ (Multi-Horizon) │  next 6/10/12 hours?"
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│ Patient-Level   │  Ensures no data leakage: same patient
+│ Train/Val/Test  │  never appears in multiple splits
+│ Split (70/15/15)│  Stratified by deterioration rate
+└────────┬────────┘
+         ▼
+    ML-Ready Data
+```
+
+### GPU Acceleration
+
+The feature extractor supports GPU-accelerated computation via PyTorch CUDA tensors, providing **3-5× speedup** over CPU on RTX 3050:
+
+```python
+# Automatic GPU detection
+pipeline = PreprocessingPipeline(use_gpu=True)
+# Falls back to CPU if no GPU available
+```
 
 ---
 
-## 📚 Citation
+## 🧠 Model Training
 
-If you use G_One_Sync AI in your research, please cite:
+### Model Architectures
 
-```bibtex
-@software{g_one_sync_ai_2026,
-  title     = {G_One_Sync AI: AI-Powered Early Clinical Deterioration Prediction System},
-  author    = {G_One_Sync AI Team},
-  year      = {2026},
-  version   = {1.0.0},
-  url       = {https://github.com/yourusername/G_One_Sync_AI},
-  note      = {Multi-model ensemble (XGBoost + BiLSTM + Transformer) with SHAP
-               explainability, isotonic calibration, and real-time clinical dashboard
-               for ICU deterioration prediction}
+#### 1. XGBoost (Gradient Boosted Trees)
+- **Input**: Tabular features (215 dimensions)
+- **Architecture**: 500 trees, max_depth=8, learning_rate=0.05
+- **GPU**: `tree_method="gpu_hist"` for GPU histogram computation
+- **Loss**: Weighted binary cross-entropy (class imbalance handling)
+- **Strengths**: Best for tabular features, fast inference, interpretable via SHAP
+
+#### 2. BiLSTM (Bidirectional Long Short-Term Memory)
+- **Input**: Temporal sequences (N, 12, 11) — 12 timesteps × 11 features
+- **Architecture**: 2-layer BiLSTM, hidden_size=128, dropout=0.3
+- **Loss**: Focal Loss (γ=2.0, α=0.25) for class imbalance
+- **Strengths**: Captures temporal dependencies and sequential patterns
+
+#### 3. Transformer (Multi-Head Attention)
+- **Input**: Temporal sequences (N, 12, 11)
+- **Architecture**: d_model=64, nhead=4, num_layers=2, positional encoding
+- **Loss**: Focal Loss with learned attention weights
+- **Strengths**: Captures long-range dependencies, parallelizable
+
+### Ensemble Strategy
+
+The **Hybrid Ensemble** combines all three models using learned stacking:
+
+```
+XGBoost Prediction  ─┐
+BiLSTM Prediction   ─┤─→ Logistic Regression Meta-Learner ─→ Final Probability
+Transformer Pred.   ─┘
+```
+
+The meta-learner is fit on validation set predictions, learning optimal model combination weights that maximize AUROC.
+
+### Hyperparameter Optimization
+
+Optuna Bayesian search with MedianPruner:
+- **100 trials** per model type
+- Optimizes for **validation AUROC**
+- Supports GPU-accelerated search
+- Early stopping via pruning of unpromising trials
+
+---
+
+## 📊 Model Performance
+
+### Test Set Results
+
+| Model | AUROC | AUPRC | Accuracy | Precision | Recall | F1 | Specificity |
+|-------|-------|-------|----------|-----------|--------|------|-------------|
+| **XGBoost** | 0.9552 | 0.7219 | 0.9453 | 0.5037 | 0.7810 | 0.6124 | 0.9549 |
+| **BiLSTM** | 0.9520 | 0.6680 | 0.9526 | 0.5516 | 0.7694 | 0.6426 | 0.9634 |
+| **Transformer** | 0.9492 | 0.6423 | 0.9596 | 0.6320 | 0.6478 | 0.6398 | 0.9779 |
+| **🏆 Ensemble** | **0.9579** | **0.7018** | **0.9690** | **0.7691** | **0.6292** | **0.6921** | **0.9889** |
+
+### Key Takeaways
+
+- **Ensemble achieves the highest AUROC (0.9579)** and best overall balance
+- **XGBoost leads in AUPRC (0.7219)** — best at ranking deterioration risk
+- **Transformer achieves highest specificity (0.9779)** — fewest false alarms
+- **BiLSTM achieves highest recall (0.7694)** — catches the most true deteriorations
+
+### Top Predictive Features (SHAP)
+
+| Rank | Feature | SHAP Importance | Clinical Meaning |
+|------|---------|----------------|------------------|
+| 1 | `lactate_delta` | 1.020 | Tissue hypoperfusion / sepsis marker |
+| 2 | `creatinine_delta` | 0.646 | Renal function deterioration |
+| 3 | `spo2_pct_latest` | 0.471 | Current oxygenation status |
+| 4 | `shock_index_current` | 0.431 | Compensated shock indicator (HR/SBP) |
+| 5 | `crp_level_delta` | 0.303 | Systemic inflammation trend |
+| 6 | `mobility_score_mean` | 0.302 | Functional status indicator |
+| 7 | `respiratory_rate_latest` | 0.267 | Respiratory distress |
+| 8 | `wbc_count_delta` | 0.264 | Immune response / infection |
+| 9 | `lactate_latest` | 0.244 | Absolute lactate level |
+| 10 | `mobility_score_slope` | 0.215 | Functional decline trajectory |
+
+---
+
+## 🎯 Probability Calibration
+
+Raw model outputs are calibrated using **Isotonic Regression** to ensure clinical reliability:
+
+| Model | Brier Before | Brier After | Improvement | ECE Before | ECE After |
+|-------|-------------|-------------|-------------|-----------|----------|
+| XGBoost | 0.0433 | 0.0230 | **46.8%** | 0.0547 | **9.9 × 10⁻⁷** |
+| BiLSTM | 0.0621 | 0.0257 | **58.7%** | 0.1625 | **1.0 × 10⁻⁹** |
+| Transformer | 0.0583 | 0.0262 | **55.1%** | 0.1709 | **8.4 × 10⁻¹⁰** |
+
+> **ECE → ~10⁻⁹** means that when the model says "70% risk," approximately 70% of those patients truly deteriorate. This is essential for clinical trust.
+
+### Clinically-Optimized Thresholds
+
+| Strategy | Threshold | Precision | Recall | F1 | Use Case |
+|---------|-----------|-----------|--------|------|----------|
+| F1-Optimal | 0.920 | 0.760 | 0.637 | 0.693 | Balanced alerting |
+| Youden's J | 0.196 | 0.342 | 0.856 | 0.489 | Maximum sensitivity screening |
+| Clinical | 0.735 | 0.634 | 0.723 | 0.675 | Recommended for ICU use |
+| High-Recall | 0.100 | 0.275 | 0.902 | 0.421 | Safety-critical: catch >90% |
+
+---
+
+## 🔍 SHAP Explainability
+
+Every prediction includes a full SHAP explanation — required for regulatory compliance and clinical trust.
+
+### Explainer Types
+
+| Model Type | SHAP Explainer | Method |
+|-----------|---------------|--------|
+| XGBoost | `TreeExplainer` | Exact SHAP values (polynomial time) |
+| BiLSTM | `DeepExplainer` | Gradient-based approximation |
+| Transformer | `DeepExplainer` | Gradient-based approximation |
+
+### Example Patient Explanation
+
+```json
+{
+  "patient_id": 1902,
+  "deterioration_probability": 0.82,
+  "risk_level": "CRITICAL",
+  "top_risk_factors": [
+    {"feature": "lactate_delta", "shap_value": 1.84, "direction": "increasing"},
+    {"feature": "spo2_pct_latest", "shap_value": -0.72, "direction": "decreasing"},
+    {"feature": "shock_index_current", "shap_value": 0.65, "direction": "elevated"}
+  ],
+  "clinical_narrative": "Rising lactate with dropping oxygen saturation and elevated shock index suggest developing septic shock."
 }
 ```
 
 ---
 
-## 📞 Acknowledgments
+## 🌐 Serving API
 
-- **MIMIC-IV Database**: Johnson, A., et al. (2023). MIMIC-IV Clinical Database. PhysioNet.
-- **SHAP**: Lundberg, S.M. & Lee, S.I. (2017). A Unified Approach to Interpreting Model Predictions. NeurIPS.
-- **XGBoost**: Chen, T. & Guestrin, C. (2016). XGBoost: A Scalable Tree Boosting System. KDD.
-- **NEWS Validation**: Smith, G.B., et al. (2013). The ability of the National Early Warning Score (NEWS) to discriminate patients at risk of early cardiac arrest, unanticipated intensive care unit admission, and death. *Resuscitation*.
-- **MEWS Validation**: Subbe, C.P., et al. (2001). Validation of a modified Early Warning Score in medical admissions. *QJM*.
-- **qSOFA Validation**: Seymour, C.W., et al. (2016). Assessment of Clinical Criteria for Sepsis. *JAMA*.
+### Prediction Server (Port 8001)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check with loaded models & GPU status |
+| `/model/info` | GET | Model metadata, versions, feature count |
+| `/predict` | POST | Single patient prediction |
+| `/predict/batch` | POST | Batch predictions (up to 100 patients) |
+| `/predict/explain` | POST | Prediction + SHAP waterfall explanation |
+| `/auth/login` | POST | Physician JWT authentication |
+| `/auth/refresh` | POST | Refresh JWT access token |
+| `/mobile/watchlist` | GET | Physician's patient watchlist with risk scores |
+| `/mobile/patient/{id}` | GET | Single patient risk summary + vitals |
+| `/notifications/register` | POST | Register FCM device token |
+| `/notifications/test` | POST | Send test push notification |
+| `/notifications/{token}` | DELETE | Unregister device |
+| `/multi-outcome/predict` | POST | Multi-outcome prediction (sepsis, cardiac, respiratory) |
+| `/multi-outcome/health` | GET | Multi-outcome model status |
+
+### Request/Response Example
+
+**Request:**
+```bash
+curl -X POST http://localhost:8001/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_id": 42,
+    "vitals": {
+      "heart_rate": 112,
+      "respiratory_rate": 28,
+      "spo2_pct": 88.5,
+      "temperature_c": 38.9,
+      "systolic_bp": 85,
+      "diastolic_bp": 55
+    },
+    "labs": {
+      "wbc_count": 18.5,
+      "lactate": 4.2,
+      "creatinine": 2.1,
+      "crp_level": 180,
+      "hemoglobin": 9.5,
+      "sepsis_risk_score": 0.72
+    },
+    "model_type": "ensemble"
+  }'
+```
+
+**Response:**
+```json
+{
+  "patient_id": 42,
+  "deterioration_probability": 0.847,
+  "risk_level": "CRITICAL",
+  "model_used": "ensemble",
+  "confidence_interval": [0.79, 0.89],
+  "prediction_timestamp": "2026-10-22T06:00:00Z",
+  "inference_time_ms": 23.4
+}
+```
+
+---
+
+## 🖥 Clinical Dashboard
+
+The real-time clinical monitoring dashboard provides ICU staff with an at-a-glance view of all patients.
+
+### Dashboard Features
+
+- **Patient Risk Overview** — Color-coded risk tiles for all ICU patients
+- **Real-Time WebSocket Feed** — Live updates without page refresh
+- **Vital Sign Trends** — Interactive Plotly charts for vital sign history
+- **Alert Feed** — Clinical, system, and drift alerts with severity levels
+- **Drift Monitoring** — PSI and KS-test visualizations
+- **System Metrics** — Prediction latency, throughput, model performance
+
+### Routes
+
+| Route | Description |
+|-------|-------------|
+| `GET /` | Dashboard HTML page |
+| `GET /api/metrics` | System + model metrics JSON |
+| `GET /api/alerts` | Recent alerts list |
+| `GET /api/drift` | Drift detection report |
+| `GET /api/patients` | Patient risk overview |
+| `WS /ws/live` | WebSocket real-time feed |
+
+### Running the Dashboard
+
+```bash
+uvicorn src.dashboard.app:app --host 0.0.0.0 --port 8081
+```
+
+---
+
+## 📱 Mobile Companion App
+
+A **React Native (Expo)** companion app for attending physicians to monitor patients remotely.
+
+### Screens
+
+| Screen | Description |
+|--------|-------------|
+| **Login** | Physician authentication (JWT + optional biometric) |
+| **Dashboard** | Patient list with real-time risk scores & trends |
+| **Patient Detail** | Individual patient vitals, SHAP chart, alert history |
+| **Alerts** | Push notification history with severity filtering |
+
+### Components
+
+| Component | Description |
+|-----------|-------------|
+| `RiskBadge` | Color-coded risk level indicator (CRITICAL/HIGH/MODERATE/LOW) |
+| `VitalCard` | Single vital sign display with trend arrow |
+| `SHAPChart` | SHAP waterfall visualization for model explanations |
+
+### Push Notifications
+
+When a patient's risk crosses configurable thresholds, Firebase Cloud Messaging sends push alerts:
+
+- **CRITICAL** (≥ 0.75): Immediate push with vibration
+- **HIGH** (≥ 0.50): Standard priority push
+- Configurable via `JEEVAN_MOBILE_PUSH_CRITICAL_THRESHOLD` and `JEEVAN_MOBILE_PUSH_HIGH_THRESHOLD`
+
+### Running
+
+```bash
+cd mobile
+npm install
+npx expo start --web      # Web browser
+npx expo start --android   # Android emulator
+npx expo start --ios       # iOS simulator
+```
+
+---
+
+## 🏥 EMR/EHR Integration
+
+Native integration with hospital Electronic Medical Record systems via two industry-standard protocols.
+
+### FHIR R4 Integration
+
+| Feature | Description |
+|---------|-------------|
+| **FHIR Client** | Async REST client for FHIR R4 servers |
+| **Resource Mapper** | Converts FHIR Observation/Patient → internal format |
+| **Subscriptions** | Real-time FHIR R4 subscriptions for new observations |
+| **OAuth 2.0** | Client credentials authentication |
+
+Supported FHIR Resources:
+- `Patient` — Demographics & identifiers
+- `Observation` — Vital signs & lab results (LOINC coded)
+- `Encounter` — ICU admissions & transfers
+
+### HL7v2 MLLP Integration
+
+| Feature | Description |
+|---------|-------------|
+| **MLLP Listener** | TCP server on port 2575 for HL7v2 messages |
+| **Message Parser** | Parses ORU^R01 (lab results) and ADT^A01 (admissions) |
+| **Field Mapper** | Maps HL7v2 segments (OBX, PID, PV1) → internal format |
+
+### Audit Trail
+
+All EMR data access is logged to `data/audit/` with:
+- Timestamp, data source, patient identifier
+- Operation type (read/write)
+- PHI access tracking for HIPAA compliance
+
+### Configuration
+
+```bash
+# Enable EMR integration
+export JEEVAN_EMR_ENABLED=true
+export JEEVAN_EMR_FHIR_BASE_URL=https://ehr.hospital.org/fhir/R4
+export JEEVAN_EMR_FHIR_CLIENT_ID=your-client-id
+export JEEVAN_EMR_FHIR_CLIENT_SECRET=your-secret
+export JEEVAN_EMR_HL7_ENABLED=true
+export JEEVAN_EMR_HL7_MLLP_PORT=2575
+```
+
+---
+
+## 🌍 Federated Learning
+
+Privacy-preserving multi-site model training without sharing patient data.
+
+### Architecture
+
+```mermaid
+graph TB
+    subgraph "Coordinator (Central Server)"
+        C["FL Coordinator<br/>gRPC :50051"]
+        AGG["Aggregator<br/>FedAvg / FedProx / FedBN"]
+        PRIV["Privacy Accountant<br/>Rényi DP (ε=8.0)"]
+        SEC["Secure Aggregation<br/>Secret Sharing"]
+    end
+
+    subgraph "Hospital A"
+        PA["Participant A<br/>Local Training"]
+        DA[("Local Data A<br/>Never Leaves Site")]
+    end
+
+    subgraph "Hospital B"
+        PB["Participant B<br/>Local Training"]
+        DB[("Local Data B<br/>Never Leaves Site")]
+    end
+
+    subgraph "Hospital C"
+        PC["Participant C<br/>Local Training"]
+        DC[("Local Data C<br/>Never Leaves Site")]
+    end
+
+    C -->|"1. Broadcast Global Model"| PA & PB & PC
+    DA --> PA
+    DB --> PB
+    DC --> PC
+    PA -->|"2. Send Encrypted Gradients"| SEC
+    PB -->|"2. Send Encrypted Gradients"| SEC
+    PC -->|"2. Send Encrypted Gradients"| SEC
+    SEC --> AGG
+    AGG --> PRIV
+    PRIV -->|"3. Updated Global Model"| C
+```
+
+### Privacy Guarantees
+
+| Mechanism | Default | Description |
+|-----------|---------|-------------|
+| **Differential Privacy** | ε = 8.0, δ = 10⁻⁵ | Per-sample gradient clipping + Gaussian noise via Opacus |
+| **Secure Aggregation** | Enabled | Shamir secret sharing — coordinator never sees raw updates |
+| **Gradient Clipping** | max_norm = 1.0 | Bounds sensitivity for DP guarantees |
+| **Privacy Accounting** | Rényi DP | Tight composition tracking across rounds |
+
+### Aggregation Strategies
+
+| Strategy | Description |
+|----------|-------------|
+| **FedAvg** | Weighted averaging of model parameters |
+| **FedProx** | FedAvg + proximal term (μ=0.01) for heterogeneous data |
+| **FedBN** | Keeps batch normalization layers local |
+
+### Running Federated Training
+
+```bash
+# Start coordinator
+export JEEVAN_FL_ENABLED=true
+export JEEVAN_FL_FL_ROLE=coordinator
+python -m src.federated.coordinator
+
+# Start participant (on each hospital site)
+export JEEVAN_FL_ENABLED=true
+export JEEVAN_FL_FL_ROLE=participant
+export JEEVAN_FL_SITE_ID=hospital-a
+python -m src.federated.participant
+```
+
+---
+
+## 🔄 Continuous Learning
+
+Drift-triggered automatic retraining with clinical safety gates.
+
+### Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring: System Running
+
+    Monitoring --> DriftDetected: PSI > 0.2 or KS p < 0.05
+    DriftDetected --> BufferCheck: Check data accumulator
+
+    BufferCheck --> Retraining: Buffer ≥ 5,000 samples
+    BufferCheck --> Monitoring: Insufficient data
+
+    Retraining --> ShadowEval: New "Challenger" model trained
+    ShadowEval --> Comparison: 24h shadow evaluation complete
+
+    Comparison --> Promotion: AUROC improved ≥ 0.5%
+    Comparison --> Discard: Not better than champion
+
+    Promotion --> HumanApproval: auto_promote = False
+    Promotion --> AutoDeploy: auto_promote = True
+    HumanApproval --> Deployed: Clinician approves
+    HumanApproval --> Discard: Clinician rejects
+    AutoDeploy --> Deployed
+
+    Deployed --> Monitoring: New champion model live
+    Discard --> Monitoring: Keep existing model
+```
+
+### Components
+
+| Component | Description |
+|-----------|-------------|
+| **Retrain Orchestrator** | Central coordinator for the continuous learning lifecycle |
+| **Data Accumulator** | Buffers production data for retraining (max 500 MB) |
+| **Shadow Evaluator** | Runs challenger model in shadow mode for 24 hours |
+| **Champion/Challenger** | A/B comparison requiring AUROC improvement ≥ 0.5% |
+| **Model Versioner** | Manages up to 10 model versions with metadata |
+
+### Safety Gates
+
+> **By default, `auto_promote = False`.** In a clinical safety system, model promotion requires human approval. Automatic promotion should only be enabled after FDA clearance for adaptive AI.
+
+---
+
+## 🎯 Multi-Outcome Prediction
+
+Extends the binary deterioration model to simultaneously predict multiple clinical events.
+
+### Predicted Outcomes
+
+| Outcome | Horizon | Task Weight |
+|---------|---------|-------------|
+| General Deterioration | 12 hours | 1.0 |
+| Sepsis | 6 hours | 1.5 |
+| Cardiac Arrest | 12 hours | 2.0 |
+| Respiratory Failure | 12 hours | 1.5 |
+
+### Architecture
+
+```
+Input Features (215)
+        │
+        ▼
+┌───────────────────┐
+│  Shared Trunk     │  Transformer encoder (d=64, h=4, L=2)
+│  (Feature Fusion) │
+└───────┬───────────┘
+        │
+    ┌───┼───┬───┐
+    ▼   ▼   ▼   ▼
+┌─────┐┌─────┐┌─────┐┌─────┐
+│Head1││Head2││Head3││Head4│  Task-specific classification heads
+│Deter││Sepsi││Cardi││Respi│  (Linear → ReLU → Dropout → Sigmoid)
+└─────┘└─────┘└─────┘└─────┘
+```
+
+### Multi-Task Loss
+
+```
+L_total = Σᵢ wᵢ · FocalLoss(ŷᵢ, yᵢ)
+```
+
+Where `wᵢ` are task weights proportional to outcome rarity (higher weight for rarer events like cardiac arrest).
+
+---
+
+## 📈 Monitoring & Alerting
+
+### Prometheus Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `predictions_total` | Counter | Total predictions served |
+| `prediction_latency_ms` | Histogram | Inference time per request |
+| `high_risk_predictions` | Counter | Predictions with risk > 0.5 |
+| `model_loaded` | Gauge | Currently loaded model types |
+| `drift_psi_score` | Gauge | Latest PSI drift score |
+
+### Drift Detection
+
+| Method | Threshold | Meaning |
+|--------|-----------|---------|
+| **PSI < 0.1** | No drift | Distributions stable |
+| **0.1 ≤ PSI < 0.2** | Moderate | Monitor closely |
+| **PSI ≥ 0.25** | Significant | Trigger retraining |
+| **KS p < 0.05** | Statistical | Distribution shift detected |
+
+### Clinical Alerting
+
+The alerting engine supports rule-based alerts with severity levels and cooldowns:
+
+| Alert Type | Source | Example |
+|-----------|--------|---------|
+| **Patient Deterioration** | Clinical | "Patient 42: Risk 87% (CRITICAL)" |
+| **Vital Sign Out of Range** | Clinical | "Patient 15: SpO₂ dropped to 82%" |
+| **Data Drift Detected** | System | "Feature lactate_delta PSI = 0.31" |
+| **Model Performance Drop** | System | "Serving AUROC dropped below 0.90" |
+| **Data Quality Issue** | System | "12% missing values in last hour" |
+
+---
+
+## ⚖️ Regulatory Compliance
+
+G_One_Sync AI maintains **FDA 510(k) submission readiness** with comprehensive compliance documentation.
+
+### Standards Compliance
+
+| Standard | Scope | Status |
+|----------|-------|--------|
+| **IEC 62304** | Medical device software lifecycle | ✅ Design controls documented |
+| **ISO 14971** | Risk management for medical devices | ✅ FMEA + hazard log maintained |
+| **ISO 13485** | Quality management systems | ✅ 6 SOPs documented |
+| **21 CFR Part 820** | FDA Quality System Regulation | ✅ QMS framework in place |
+| **HIPAA** | Patient data privacy | ✅ PHI audit trails |
+
+### Compliance Artifacts
+
+```
+compliance/
+├── design_controls/         # IEC 62304
+│   ├── user_needs.md        # UN-001 through UN-005
+│   ├── design_inputs.md     # DI-001 through DI-015
+│   ├── design_outputs.md    # DO-001 through DO-010
+│   ├── design_verification.md
+│   └── design_validation.md
+├── risk_management/         # ISO 14971
+│   ├── risk_analysis.md     # Comprehensive risk matrix
+│   ├── fmea.md              # Failure Mode & Effects Analysis
+│   ├── hazard_log.md        # Active hazard tracking
+│   └── risk_benefit_analysis.md
+├── qms/                     # Quality Management SOPs
+│   ├── SOP-001 through SOP-006
+├── templates/
+│   ├── model_card_template.md
+│   └── intended_use_statement.md
+├── traceability/            # Requirements ↔ Tests
+│   ├── traceability_matrix.md
+│   └── traceability_matrix.json
+└── sbom/                    # Software Bill of Materials
+    ├── sbom.json            # CycloneDX format
+    └── sbom_report.md
+```
+
+### Predicate Comparison
+
+The system is benchmarked against FDA-cleared predicate devices:
+- **MEWS** (Modified Early Warning Score) — G_One_Sync achieves significantly higher AUROC
+- **NEWS2** (National Early Warning Score 2) — Improved sensitivity with similar specificity
+
+---
+
+## 🐳 Docker Deployment
+
+### Service Stack
+
+```yaml
+# docker/docker-compose.yml
+services:
+  prediction-api    # Port 8001 — Model serving (GPU)
+  ingest-api        # Port 8000 — Data ingestion
+  redpanda          # Port 9092 — Kafka-compatible streaming
+  mlflow            # Port 5000 — Experiment tracking
+  hl7-listener      # Port 2575 — HL7v2 MLLP (emr profile)
+  fl-coordinator    # Port 50051 — Federated learning (federated profile)
+```
+
+### Quick Start
+
+```bash
+# Start core services
+docker-compose -f docker/docker-compose.yml up -d
+
+# Start with EMR integration
+docker-compose -f docker/docker-compose.yml --profile emr up -d
+
+# Start with federated learning
+docker-compose -f docker/docker-compose.yml --profile federated up -d
+
+# Start everything
+docker-compose -f docker/docker-compose.yml --profile emr --profile federated up -d
+```
+
+### GPU Requirements
+
+The serving container uses NVIDIA GPU passthrough:
+- **Base image**: `nvidia/cuda:12.4.0-runtime-ubuntu22.04`
+- **Minimum**: NVIDIA GPU with 4GB VRAM
+- **Recommended**: RTX 3050 or higher
+- Health checks via `curl -f http://localhost:8001/health`
+
+---
+
+## 🔁 CI/CD Pipeline
+
+### Continuous Integration (`.github/workflows/ci.yml`)
+
+Triggers on push to `main`/`develop` and PRs to `main`:
+
+```mermaid
+graph LR
+    A[Push / PR] --> B[Checkout]
+    B --> C["Setup Python<br/>3.11 + 3.12 matrix"]
+    C --> D[Install Dependencies]
+    D --> E["Ruff Lint<br/>src/ config/"]
+    E --> F["Import Validation<br/>All core modules"]
+    F --> G["Pytest Suite<br/>+ Coverage"]
+    G --> H["Generate SBOM<br/>CycloneDX"]
+    H --> I["Validate Model Card"]
+    I --> J["Generate<br/>Traceability Matrix"]
+    J --> K["Backwards<br/>Compatibility Check"]
+    K --> L["Upload Artifacts<br/>Coverage + Compliance"]
+```
+
+### Continuous Deployment (`.github/workflows/cd.yml`)
+
+Triggers on push to `main` and version tags (`v*`):
+
+1. **Validate Models** — Import all model modules, verify integrity
+2. **Validate Serving** — Import serving module, verify app creation
+3. **Build Docker** — Build with Docker Buildx, push to GHCR
+4. **Health Check** — Dry-run container validation
+
+---
+
+## ⚙️ Configuration System
+
+All configuration is centralized in `config/settings.py` using **pydantic-settings** with environment variable overrides.
+
+### Configuration Groups
+
+| Class | Env Prefix | Fields | Purpose |
+|-------|-----------|--------|---------|
+| `DataSettings` | `JEEVAN_DATA_` | 9 | Dataset paths, output directories |
+| `KafkaSettings` | `JEEVAN_KAFKA_` | 7 | Broker config, topics, fallback |
+| `FeatureSettings` | `JEEVAN_FEATURE_` | 12 | Features, columns, split ratios |
+| `APISettings` | `JEEVAN_API_` | 5 | Ingestion API host/port/CORS |
+| `ModelSettings` | `JEEVAN_MODEL_` | 14 | Training hyperparams, MLflow, GPU |
+| `ServingSettings` | `JEEVAN_SERVING_` | 4 | Prediction server config |
+| `EMRSettings` | `JEEVAN_EMR_` | 12 | FHIR R4 + HL7v2 configuration |
+| `FederatedSettings` | `JEEVAN_FL_` | 17 | FL roles, rounds, privacy, gRPC |
+| `ContinuousSettings` | `JEEVAN_CL_` | 11 | Drift, retraining, promotion |
+| `MobileSettings` | `JEEVAN_MOBILE_` | 11 | JWT, FCM, push thresholds |
+| `MultiOutcomeSettings` | `JEEVAN_MULTI_` | 10 | Multi-task targets, architecture |
+
+### Example Overrides
+
+```bash
+# Enable GPU inference
+export JEEVAN_MODEL_USE_GPU=true
+
+# Change prediction server port
+export JEEVAN_SERVING_SERVING_PORT=9001
+
+# Enable federated learning
+export JEEVAN_FL_ENABLED=true
+export JEEVAN_FL_FL_ROLE=coordinator
+
+# Enable continuous learning with auto-promotion
+export JEEVAN_CL_CONTINUOUS_ENABLED=true
+export JEEVAN_CL_AUTO_PROMOTE=true
+
+# Enable mobile auth
+export JEEVAN_MOBILE_AUTH_ENABLED=true
+export JEEVAN_MOBILE_JWT_SECRET=your-secret-key
+```
+
+---
+
+## 🧪 Testing
+
+### Test Suite Overview
+
+| Test File | Module Tested | Coverage |
+|-----------|--------------|----------|
+| `test_ingestion.py` | Ingest API endpoints | Vitals, labs, batch, health |
+| `test_preprocessing.py` | Pipeline, features, imputation | Feature count, validation |
+| `test_modeling.py` | Trainers, ensemble, calibration | Predictions, metrics |
+| `test_serving.py` | Serving API endpoints | Predict, health, batch |
+| `test_emr_integration.py` | FHIR + HL7v2 integration | Parsing, mapping, audit |
+| `test_federated.py` | FL coordinator + participant | Registration, rounds, DP |
+| `test_continuous_learning.py` | Retrain orchestrator | Drift, shadow eval, promotion |
+| `test_mobile_api.py` | Mobile API + auth | JWT, watchlist, push |
+| `test_multi_outcome.py` | Multi-outcome prediction | Multi-head, labels, API |
+
+### Running Tests
+
+```bash
+# Full test suite with coverage
+pytest tests/ -v --cov=src --cov-report=term-missing --tb=short
+
+# Specific module
+pytest tests/test_serving.py -v
+
+# With HTML coverage report
+pytest tests/ -v --cov=src --cov-report=html
+
+# CI equivalent
+ruff check src/ config/ --ignore E501,F401 && pytest tests/ -v
+```
+
+### Test Conventions
+
+- Tests grouped by feature in classes (`class TestHealthEndpoint`)
+- Shared fixtures via `@pytest.fixture`
+- FastAPI tests use `TestClient` from `fastapi.testclient`
+- Async tests via `pytest-asyncio` with `asyncio_mode = "auto"`
+- No GPU or MIMIC-IV data required for CI tests
+
+---
+
+## 🤝 Contributing
+
+### Development Setup
+
+```bash
+# Fork & clone
+git clone https://github.com/your-fork/G_One_Sync_AI.git
+cd G_One_Sync_AI
+
+# Install dev dependencies
+pip install -r requirements.txt
+pip install ruff pytest pytest-cov
+
+# Verify setup
+ruff check src/ config/ --ignore E501,F401
+pytest tests/ -v
+```
+
+### Code Style
+
+- **Ruff** is the sole linter/formatter (line-length: 100, target: py310)
+- Type hints mandatory on all function signatures
+- Module docstrings with `═` separators
+- Import order: `__future__` → stdlib → third-party → local
+
+### Commit Convention
+
+```
+feat(modeling): add gradient accumulation for large batch training
+fix(serving): handle NaN values in lab results payload
+test(ingestion): add edge case tests for vital sign validation
+docs(readme): update architecture diagram
+```
+
+### Pre-Commit Checklist
+
+- [ ] `ruff check src/ config/` passes
+- [ ] `pytest tests/ -v` passes
+- [ ] No hardcoded paths or credentials
+- [ ] New settings added to `config/settings.py`
+- [ ] New modules have corresponding test files
+- [ ] Docstrings on all public classes and functions
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [pyproject.toml](pyproject.toml) for details.
 
 ---
 
 <p align="center">
-  <em>Built with ❤️ for saving lives through AI-powered clinical intelligence.</em>
+  <strong>Built with ❤️ for clinical safety</strong><br/>
+  <em>Because every second counts in the ICU.</em>
+</p>
+
+<p align="center">
+  <sub>G_One_Sync AI — Predicting deterioration before it happens.</sub>
 </p>

@@ -43,6 +43,7 @@ from src.serving.mobile_schemas import (
     PatientLabsSummary,
     PatientRiskSummary,
     PatientVitalsSummary,
+    RiskFactor,
     TestNotificationResponse,
     WatchlistEntry,
     WatchlistResponse,
@@ -85,6 +86,131 @@ def _get_push_service() -> PushNotificationService:
 # For Phase 8, we use an in-memory store that the serving API can update.
 
 _patient_store: dict[int, dict] = {}
+
+
+def _seed_demo_patients() -> None:
+    """Populate default ICU demo patients if patient store is empty."""
+    if _patient_store:
+        return
+    now_iso = datetime.now(tz=timezone.utc).isoformat()
+    demo_data = [
+        {
+            "patient_id": 1042,
+            "risk_level": "CRITICAL",
+            "risk_score": 88,
+            "deterioration_probability": 0.88,
+            "vitals": {"heart_rate": 128.0, "respiratory_rate": 32.0, "spo2_pct": 86.0, "temperature_c": 38.9, "systolic_bp": 82.0, "diastolic_bp": 48.0},
+            "labs": {"wbc_count": 19.5, "lactate": 4.2, "creatinine": 2.1},
+            "alerts": ["Severe Hypoxemia: SpO2 86%", "Tachycardia: HR 128 bpm", "Lactate critical: 4.2 mmol/L"],
+            "top_risk_factors": [
+                {"feature_name": "spo2_pct", "display_name": "SpO2 Saturation", "shap_value": 0.32, "current_value": 86.0, "direction": "increasing"},
+                {"feature_name": "lactate", "display_name": "Serum Lactate", "shap_value": 0.28, "current_value": 4.2, "direction": "increasing"},
+                {"feature_name": "respiratory_rate", "display_name": "Respiratory Rate", "shap_value": 0.21, "current_value": 32.0, "direction": "increasing"},
+            ],
+            "last_updated": now_iso,
+            "trend": "worsening",
+        },
+        {
+            "patient_id": 1019,
+            "risk_level": "CRITICAL",
+            "risk_score": 82,
+            "deterioration_probability": 0.82,
+            "vitals": {"heart_rate": 115.0, "respiratory_rate": 26.0, "spo2_pct": 91.0, "temperature_c": 39.2, "systolic_bp": 85.0, "diastolic_bp": 52.0},
+            "labs": {"wbc_count": 21.0, "lactate": 3.8, "creatinine": 2.4},
+            "alerts": ["Septic Shock: Refractory Hypotension", "Elevated Lactate: 3.8 mmol/L"],
+            "top_risk_factors": [
+                {"feature_name": "systolic_bp", "display_name": "Systolic Blood Pressure", "shap_value": 0.35, "current_value": 85.0, "direction": "increasing"},
+                {"feature_name": "lactate", "display_name": "Serum Lactate", "shap_value": 0.25, "current_value": 3.8, "direction": "increasing"},
+            ],
+            "last_updated": now_iso,
+            "trend": "worsening",
+        },
+        {
+            "patient_id": 1088,
+            "risk_level": "HIGH",
+            "risk_score": 68,
+            "deterioration_probability": 0.68,
+            "vitals": {"heart_rate": 104.0, "respiratory_rate": 28.0, "spo2_pct": 92.0, "temperature_c": 38.1, "systolic_bp": 100.0, "diastolic_bp": 62.0},
+            "labs": {"wbc_count": 16.2, "lactate": 2.6, "creatinine": 1.4},
+            "alerts": ["Tachypnea: RR 28 breaths/min", "WBC elevated: 16.2 K/uL"],
+            "top_risk_factors": [
+                {"feature_name": "respiratory_rate", "display_name": "Respiratory Rate", "shap_value": 0.29, "current_value": 28.0, "direction": "increasing"},
+                {"feature_name": "wbc_count", "display_name": "WBC Count", "shap_value": 0.22, "current_value": 16.2, "direction": "increasing"},
+            ],
+            "last_updated": now_iso,
+            "trend": "worsening",
+        },
+        {
+            "patient_id": 1023,
+            "risk_level": "HIGH",
+            "risk_score": 54,
+            "deterioration_probability": 0.54,
+            "vitals": {"heart_rate": 96.0, "respiratory_rate": 22.0, "spo2_pct": 94.0, "temperature_c": 37.6, "systolic_bp": 94.0, "diastolic_bp": 58.0},
+            "labs": {"wbc_count": 12.8, "lactate": 1.9, "creatinine": 1.2},
+            "alerts": ["Borderline Hypotension: SBP 94 mmHg"],
+            "top_risk_factors": [
+                {"feature_name": "systolic_bp", "display_name": "Systolic Blood Pressure", "shap_value": 0.20, "current_value": 94.0, "direction": "increasing"},
+            ],
+            "last_updated": now_iso,
+            "trend": "stable",
+        },
+        {
+            "patient_id": 1055,
+            "risk_level": "MODERATE",
+            "risk_score": 38,
+            "deterioration_probability": 0.38,
+            "vitals": {"heart_rate": 92.0, "respiratory_rate": 19.0, "spo2_pct": 96.0, "temperature_c": 37.2, "systolic_bp": 118.0, "diastolic_bp": 72.0},
+            "labs": {"wbc_count": 9.4, "lactate": 1.4, "creatinine": 1.0},
+            "alerts": ["Mild Tachycardia: HR 92 bpm"],
+            "top_risk_factors": [
+                {"feature_name": "heart_rate", "display_name": "Heart Rate", "shap_value": 0.15, "current_value": 92.0, "direction": "increasing"},
+            ],
+            "last_updated": now_iso,
+            "trend": "stable",
+        },
+        {
+            "patient_id": 1071,
+            "risk_level": "MODERATE",
+            "risk_score": 32,
+            "deterioration_probability": 0.32,
+            "vitals": {"heart_rate": 84.0, "respiratory_rate": 18.0, "spo2_pct": 97.0, "temperature_c": 36.9, "systolic_bp": 122.0, "diastolic_bp": 78.0},
+            "labs": {"wbc_count": 8.1, "lactate": 1.2, "creatinine": 0.9},
+            "alerts": [],
+            "top_risk_factors": [],
+            "last_updated": now_iso,
+            "trend": "improving",
+        },
+        {
+            "patient_id": 1012,
+            "risk_level": "LOW",
+            "risk_score": 14,
+            "deterioration_probability": 0.14,
+            "vitals": {"heart_rate": 72.0, "respiratory_rate": 16.0, "spo2_pct": 98.0, "temperature_c": 36.8, "systolic_bp": 124.0, "diastolic_bp": 76.0},
+            "labs": {"wbc_count": 6.8, "lactate": 0.9, "creatinine": 0.8},
+            "alerts": [],
+            "top_risk_factors": [],
+            "last_updated": now_iso,
+            "trend": "improving",
+        },
+        {
+            "patient_id": 1030,
+            "risk_level": "LOW",
+            "risk_score": 8,
+            "deterioration_probability": 0.08,
+            "vitals": {"heart_rate": 68.0, "respiratory_rate": 14.0, "spo2_pct": 99.0, "temperature_c": 36.6, "systolic_bp": 118.0, "diastolic_bp": 74.0},
+            "labs": {"wbc_count": 5.9, "lactate": 0.7, "creatinine": 0.8},
+            "alerts": [],
+            "top_risk_factors": [],
+            "last_updated": now_iso,
+            "trend": "stable",
+        },
+    ]
+    for d in demo_data:
+        _patient_store[d["patient_id"]] = d
+
+
+# Initialize demo data on module load
+_seed_demo_patients()
 
 
 def update_patient_risk(
@@ -248,6 +374,10 @@ async def get_patient_summary(
         )
 
     data = _patient_store[patient_id]
+    risk_factors = [
+        RiskFactor(**rf) if isinstance(rf, dict) else rf
+        for rf in data.get("top_risk_factors", [])
+    ]
 
     return PatientRiskSummary(
         patient_id=data["patient_id"],
@@ -256,7 +386,7 @@ async def get_patient_summary(
         deterioration_probability=data["deterioration_probability"],
         vitals=PatientVitalsSummary(**data["vitals"]),
         labs=PatientLabsSummary(**data["labs"]),
-        top_risk_factors=[],  # Populated by SHAP when available
+        top_risk_factors=risk_factors,
         last_updated=data["last_updated"],
         alerts=data.get("alerts", []),
     )

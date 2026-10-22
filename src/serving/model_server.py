@@ -28,6 +28,7 @@ from typing import Any, Optional
 
 import numpy as np
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from pydantic import BaseModel, Field
 
@@ -310,6 +311,15 @@ app = FastAPI(
     title="G_One_Sync AI — Clinical Deterioration Prediction API",
     version="3.0.0",
     description="Real-time ICU deterioration risk scoring with explainability and mobile companion API",
+)
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=serving_settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 registry = ModelRegistry()
